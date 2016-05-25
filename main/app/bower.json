@@ -1,0 +1,28 @@
+{
+  "name": "weather-station-app",
+  "homepage": "https://github.com/felix-sch/weather-station-app",
+  "authors": [
+    "felix-sch"
+  ],
+  "description": "",
+  "main": "index.html",
+  "license": "GNU General Public License v3.0",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "^1.5.5",
+    "angular-animate": "^1.5.5",
+    "angular-aria": "^1.5.5",
+    "angular-messages": "^1.5.5",
+    "angular-material": "^1.0.9",
+    "bootswatch-dist": "lumen",
+    "jquery": "^2.2.4",
+    "angular-chart": "^0.5.0"
+  }
+}

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Weather App</title>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+
+  <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Roboto:400,500,700,400italic'>
+  <link rel="stylesheet" href="./vendor/bootswatch-dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./vendor/c3/c3.min.css">
+  <link rel="stylesheet" href="./css/app.css">
+  <link rel="stylesheet" href="./css/sidebar.css">
+  <link rel="stylesheet" href="./css/charts.css">
+</head>
+
+<body ng-app="weatherApp" ng-cloak>
+
+  <div id="wrapper">
+    <div class="overlay"></div>
+
+    <!-- Sidebar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" id="sidebar-wrapper" role="navigation">
+      <ul class="nav sidebar-nav">
+        <li class="sidebar-brand">
+          <a href="#">
+            Brand
+          </a>
+        </li>
+        <li>
+          <a href="#">Home</a>
+        </li>
+        <li>
+          <a href="#">About</a>
+        </li>
+        <li>
+          <a href="#">Events</a>
+        </li>
+        <li>
+          <a href="#">Team</a>
+        </li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Works <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu">
+            <li class="dropdown-header">Dropdown heading</li>
+            <li><a href="#">Action</a></li>
+            <li><a href="#">Another action</a></li>
+            <li><a href="#">Something else here</a></li>
+            <li><a href="#">Separated link</a></li>
+            <li><a href="#">One more separated link</a></li>
+          </ul>
+        </li>
+        <li>
+          <a href="#">Services</a>
+        </li>
+        <li>
+          <a href="#">Contact</a>
+        </li>
+        <li>
+          <a href="https://twitter.com/maridlcrmn">Follow me</a>
+        </li>
+      </ul>
+    </nav>
+    <!-- /#sidebar-wrapper -->
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+      <button type="button" class="hamburger is-closed" data-toggle="offcanvas">
+        <span class="hamb-top"></span>
+        <span class="hamb-middle"></span>
+        <span class="hamb-bottom"></span>
+      </button>
+      <div class="container">
+
+        <div class="row">
+          <div class="col-lg-4">
+
+            <div class="panel panel-info">
+              <div class="panel-heading">Letzte Messungen</div>
+              <div class="panel-body"><h1>23 °C, Stuttgart</h1>
+                <br/>
+                <p><strong>Luftdruck</strong>&nbsp;&nbsp; 1.0014  hPa (1 bar)</p>
+                <p><strong>Luftqualität</strong>&nbsp;&nbsp; Sehr gut</p>
+                <p><strong>Verhältnisse</strong>&nbsp;&nbsp; Hell, Trocken</p>
+                <p><strong>Luftfeuchtigkeit</strong>&nbsp;&nbsp; 34%</p></div>
+              </div>
+          </div>
+
+          <div class="col-lg-8">
+            <div class="panel panel-warning">
+              <div class="panel-heading">
+                Temperatur
+              </div>
+              <div class="panel-body">
+                <div id="chart-temperature" ng-controller="TemperatureCtrl">
+                  <angular-chart options="options" instance="instance"></angular-chart>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="row">
+          <div class="col-lg-6">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                Humidity
+              </div>
+              <div class="panel-body">
+                <div id="chart-humidity" ng-controller="HumidityCtrl">
+                  <angular-chart options="options" instance="instance2"></angular-chart>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+          </div>
+      </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+
+  </div>
+  <!-- /#wrapper -->
+
+  <script src="./vendor/angular/angular.min.js"></script>
+  <script src="./vendor/d3/d3.min.js"></script>
+  <script src="./vendor/c3/c3.min.js"></script>
+  <script src="./vendor/angular-chart/angular-chart.min.js"></script>
+  <script src="./vendor/jquery/dist/jquery.min.js"></script>
+  <script src="./vendor/bootswatch-dist/js/bootstrap.min.js"></script>
+
+  <script src="./js/sidebar.js"></script>
+  <script>
+  // kick off app
+  angular.module('weatherApp', ['angularChart'])
+  </script>
+
+  <script src="./js/config.js"></script>
+  <script src="./js/service/dataService.js"></script>
+  <script src="./js/controller/temperatureCtrl.js"></script>
+  <script src="./js/controller/humidityCtrl.js"></script>
+</body>
+</html>
