@@ -80,6 +80,20 @@ func QueryHandle(env *Env) http.Handler {
 	})
 }
 
+func AddApiRoutes(env *Env, router *mux.Router) {
+	logger.Info.Println("Adding routes to router/subrouter")
+
+	// Subroutes on /api go here
+	subRouter := router.PathPrefix("/api").Subrouter()
+	subRouter.PathPrefix("/get/{last:[0-9]+}").Methods("GET").Handler(QueryHandle(env))
+    subRouter.PathPrefix("/get").Methods("GET").Handler(QueryHandle(env))
+	subRouter.PathPrefix("/{key}").Methods("GET").Handler(ApiHandler(env))
+	subRouter.Methods("GET").Handler(ApiHandler(env))
+
+	// Routes on Router go here
+	router.PathPrefix("/").Handler(StaticServe("./app/"))
+}
+
 func StartServer() {
 	c, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr: "http://localhost:8086",
@@ -90,20 +104,10 @@ func StartServer() {
 	}
 	logger.Info.Println("InfluxDB client initialized")
 
-	env := &Env{Client: c}
-
 	r := mux.NewRouter()
 	r.StrictSlash(false)
 
-	s := r.PathPrefix("/api").Subrouter()
-
-	s.PathPrefix("/get/{last:[0-9]+}").Methods("GET").Handler(QueryHandle(env))
-	s.PathPrefix("/get").Methods("GET").Handler(QueryHandle(env))
-
-	s.PathPrefix("/{key}").Methods("GET").Handler(ApiHandler(env))
-	s.Methods("GET").Handler(ApiHandler(env))
-
-	r.PathPrefix("/").Handler(StaticServe("./app/"))
+	AddApiRoutes(env, r)
 
 	http.Handle("/", r)
 	http.ListenAndServe(":8080", nil)
