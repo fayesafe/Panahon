@@ -8,7 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/influxdata/influxdb/client/v2"
-	"panahon/logger"
+	"Panahon/logger"
 )
 
 type dbClient interface {

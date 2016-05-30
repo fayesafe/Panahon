@@ -8,7 +8,7 @@ import(
     "testing"
 
 	"github.com/influxdata/influxdb/client/v2"
-	"panahon/logger"
+	"Panahon/logger"
 )
 
 type MockInfluxDbError struct {}

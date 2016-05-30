@@ -3,7 +3,7 @@ package station
 import (
 	"time"
 
-	"panahon/logger"
+	"Panahon/logger"
 )
 
 func TestRoutine() {
