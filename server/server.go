@@ -7,12 +7,12 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-
-	"panahon/logger"
+	"github.com/influxdata/influxdb/client/v2"
+	"Panahon/logger"
 )
 
-type Env struct {
-	Client client.Client
+type dbClient interface {
+	Query(q client.Query) (*client.Response, error)
 }
 
 func StaticServe(path string) http.Handler {
@@ -20,7 +20,7 @@ func StaticServe(path string) http.Handler {
 	return http.FileServer(http.Dir(path))
 }
 
-func ApiHandler(env *Env) http.Handler {
+func ApiHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "API is alive.")
 
@@ -35,7 +35,7 @@ func ApiHandler(env *Env) http.Handler {
 	})
 }
 
-func QueryHandle(env *Env) http.Handler {
+func QueryHandle(influxClient dbClient) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var q client.Query
 
@@ -50,16 +50,9 @@ func QueryHandle(env *Env) http.Handler {
 			logger.Info.Println("Calling route /api/get")
 		}
 
-		response, err := env.Client.Query(q)
+		response, err := influxClient.Query(q)
 		if err != nil {
 			logger.Error.Println(err)
-			http.Error(
-				w,
-				"Internal Server Error",
-				http.StatusInternalServerError)
-			return
-		} else if response.Error() != nil {
-			logger.Error.Println(response.Error())
 			http.Error(
 				w,
 				"Internal Server Error",
@@ -71,7 +64,6 @@ func QueryHandle(env *Env) http.Handler {
 				if err != nil {
 					logger.Error.Println(err)
 				}
-
 				logger.Info.Println("Sending Payload: " + string(payload))
 				w.Header().Set("Content-Type", "application/json")
 				w.Write(payload)
@@ -80,8 +72,25 @@ func QueryHandle(env *Env) http.Handler {
 	})
 }
 
+func AddApiRoutes(influxClient dbClient, router *mux.Router) {
+	logger.Info.Println("Adding routes to router/subrouter")
+
+	// Subroutes on /api go here
+	subRouter := router.PathPrefix("/api").Subrouter()
+	subRouter.PathPrefix(
+		"/get/{last:[0-9]+}").Methods("GET").Handler(QueryHandle(influxClient))
+	subRouter.PathPrefix(
+		"/get").Methods("GET").Handler(QueryHandle(influxClient))
+	subRouter.PathPrefix(
+		"/{key}").Methods("GET").Handler(ApiHandler())
+	subRouter.Methods("GET").Handler(ApiHandler())
+
+	// Routes on Router go here
+	router.PathPrefix("/").Handler(StaticServe("./app/"))
+}
+
 func StartServer() {
-	c, err := client.NewHTTPClient(client.HTTPConfig{
+	influxClient, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr: "http://localhost:8086",
 	})
 	if err != nil {
@@ -90,21 +99,11 @@ func StartServer() {
 	}
 	logger.Info.Println("InfluxDB client initialized")
 
-	env := &Env{Client: c}
+	router := mux.NewRouter()
+	router.StrictSlash(false)
 
-	r := mux.NewRouter()
-	r.StrictSlash(false)
+	AddApiRoutes(influxClient, router)
 
-	s := r.PathPrefix("/api").Subrouter()
-
-	s.PathPrefix("/get/{last:[0-9]+}").Methods("GET").Handler(QueryHandle(env))
-	s.PathPrefix("/get").Methods("GET").Handler(QueryHandle(env))
-
-	s.PathPrefix("/{key}").Methods("GET").Handler(ApiHandler(env))
-	s.Methods("GET").Handler(ApiHandler(env))
-
-	r.PathPrefix("/").Handler(StaticServe("./app/"))
-
-	http.Handle("/", r)
+	http.Handle("/", router)
 	http.ListenAndServe(":8080", nil)
 }

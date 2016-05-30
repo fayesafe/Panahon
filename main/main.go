@@ -3,9 +3,9 @@ package main
 import (
 	"os"
 
-	"panahon/logger"
-	"panahon/server"
-	"panahon/station"
+	"Panahon/logger"
+	"Panahon/server"
+	"Panahon/station"
 )
 
 func main() {
