@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-
+	"github.com/influxdata/influxdb/client/v2"
 	"panahon/logger"
 )
 
@@ -16,7 +16,7 @@ type Env struct {
 }
 
 type dbClient interface {
-    Query(q client.Query) (*client.Response, error)
+	Query(q client.Query) (*client.Response, error)
 }
 
 func StaticServe(path string) http.Handler {
@@ -89,9 +89,12 @@ func AddApiRoutes(influxClient dbClient, router *mux.Router) {
 
 	// Subroutes on /api go here
 	subRouter := router.PathPrefix("/api").Subrouter()
-	subRouter.PathPrefix("/get/{last:[0-9]+}").Methods("GET").Handler(QueryHandle(influxClient))
-    subRouter.PathPrefix("/get").Methods("GET").Handler(QueryHandle(influxClient))
-	subRouter.PathPrefix("/{key}").Methods("GET").Handler(ApiHandler())
+	subRouter.PathPrefix(
+		"/get/{last:[0-9]+}").Methods("GET").Handler(QueryHandle(influxClient))
+	subRouter.PathPrefix(
+		"/get").Methods("GET").Handler(QueryHandle(influxClient))
+	subRouter.PathPrefix(
+		"/{key}").Methods("GET").Handler(ApiHandler())
 	subRouter.Methods("GET").Handler(ApiHandler())
 
 	// Routes on Router go here
@@ -108,7 +111,7 @@ func StartServer() {
 	}
 	logger.Info.Println("InfluxDB client initialized")
 
-    router := mux.NewRouter()
+	router := mux.NewRouter()
 	router.StrictSlash(false)
 
 	AddApiRoutes(influxClient, router)
