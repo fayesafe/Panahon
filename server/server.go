@@ -11,10 +11,6 @@ import (
 	"panahon/logger"
 )
 
-type Env struct {
-	Client client.Client
-}
-
 type dbClient interface {
 	Query(q client.Query) (*client.Response, error)
 }
@@ -62,20 +58,12 @@ func QueryHandle(influxClient dbClient) http.Handler {
 				"Internal Server Error",
 				http.StatusInternalServerError)
 			return
-		} else if response.Error() != nil {
-			logger.Error.Println(response.Error())
-			http.Error(
-				w,
-				"Internal Server Error",
-				http.StatusInternalServerError)
-			return
 		} else {
 			for i := range response.Results {
 				payload, err := json.Marshal(response.Results[i])
 				if err != nil {
 					logger.Error.Println(err)
 				}
-
 				logger.Info.Println("Sending Payload: " + string(payload))
 				w.Header().Set("Content-Type", "application/json")
 				w.Write(payload)
