@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-    "github.com/influxdata/influxdb/client/v2"
+
 	"panahon/logger"
 )
 
@@ -41,7 +41,7 @@ func QueryHandle(env *Env) http.Handler {
 
 		if index, ok := mux.Vars(r)["last"]; ok {
 			q = client.NewQuery(
-				"SELECT * FROM meas ORDER BY DESC LIMIT " + index,
+				"SELECT * FROM meas ORDER BY DESC LIMIT "+index,
 				"test",
 				"s")
 			logger.Info.Println("Getting last " + index + " entries")
@@ -57,17 +57,17 @@ func QueryHandle(env *Env) http.Handler {
 				w,
 				"Internal Server Error",
 				http.StatusInternalServerError)
-        	return
+			return
 		} else if response.Error() != nil {
 			logger.Error.Println(response.Error())
 			http.Error(
 				w,
 				"Internal Server Error",
 				http.StatusInternalServerError)
-        	return
+			return
 		} else {
-		    for i := range response.Results {
-		        payload, err := json.Marshal(response.Results[i])
+			for i := range response.Results {
+				payload, err := json.Marshal(response.Results[i])
 				if err != nil {
 					logger.Error.Println(err)
 				}
@@ -75,7 +75,7 @@ func QueryHandle(env *Env) http.Handler {
 				logger.Info.Println("Sending Payload: " + string(payload))
 				w.Header().Set("Content-Type", "application/json")
 				w.Write(payload)
-		    }
+			}
 		}
 	})
 }
@@ -90,15 +90,15 @@ func StartServer() {
 	}
 	logger.Info.Println("InfluxDB client initialized")
 
-	env := &Env{Client:c}
+	env := &Env{Client: c}
 
-    r := mux.NewRouter()
+	r := mux.NewRouter()
 	r.StrictSlash(false)
 
 	s := r.PathPrefix("/api").Subrouter()
 
 	s.PathPrefix("/get/{last:[0-9]+}").Methods("GET").Handler(QueryHandle(env))
-    s.PathPrefix("/get").Methods("GET").Handler(QueryHandle(env))
+	s.PathPrefix("/get").Methods("GET").Handler(QueryHandle(env))
 
 	s.PathPrefix("/{key}").Methods("GET").Handler(ApiHandler(env))
 	s.Methods("GET").Handler(ApiHandler(env))
