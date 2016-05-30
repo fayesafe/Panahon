@@ -12,7 +12,7 @@ angular
         },
         temp: {
           axis: 'y',
-          type: 'spline',
+          type: 'line',
           color: 'orange',
           postfix: '°C',
           name: 'Temperatur'
@@ -28,14 +28,8 @@ angular
           }
         },
         grid: {
-          x: {
-            show: true
-          },
           y: {
-            show: true,
-            lines: [
-              { value: 0 }
-            ]
+            lines: [{ value: 0 }]
           },
         },
         tooltip: {

@@ -3,21 +3,17 @@ text {
   font-size: 14px;
 }
 
-.c3-text {
-  /*color: black !important;*/
-}
-
 #chart-temperature .c3-line-temp {
   stroke-width: 3px;
-  stroke-dasharray: 8;
+  /*stroke-dasharray: 8;
   -webkit-animation: dash 1s linear infinite;
-  -webkit-animation-name: temperature;
+  -webkit-animation-name: temperature;*/
 }
 
-@keyframes temperature {
+/*@keyframes temperature {
   from { stroke-dashoffset: 16; }
   to { stroke-dashoffset: 0; }
-}
+}*/
 
 .grid .tick {
     stroke: lightgrey;
