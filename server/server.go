@@ -15,12 +15,16 @@ type Env struct {
 	Client client.Client
 }
 
+type dbClient interface {
+    Query(q client.Query) (*client.Response, error)
+}
+
 func StaticServe(path string) http.Handler {
 	logger.Info.Println("Serving static content: " + path + " on route /")
 	return http.FileServer(http.Dir(path))
 }
 
-func ApiHandler(env *Env) http.Handler {
+func ApiHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "API is alive.")
 
@@ -35,7 +39,7 @@ func ApiHandler(env *Env) http.Handler {
 	})
 }
 
-func QueryHandle(env *Env) http.Handler {
+func QueryHandle(influxClient dbClient) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var q client.Query
 
@@ -50,7 +54,7 @@ func QueryHandle(env *Env) http.Handler {
 			logger.Info.Println("Calling route /api/get")
 		}
 
-		response, err := env.Client.Query(q)
+		response, err := influxClient.Query(q)
 		if err != nil {
 			logger.Error.Println(err)
 			http.Error(
@@ -80,22 +84,22 @@ func QueryHandle(env *Env) http.Handler {
 	})
 }
 
-func AddApiRoutes(env *Env, router *mux.Router) {
+func AddApiRoutes(influxClient dbClient, router *mux.Router) {
 	logger.Info.Println("Adding routes to router/subrouter")
 
 	// Subroutes on /api go here
 	subRouter := router.PathPrefix("/api").Subrouter()
-	subRouter.PathPrefix("/get/{last:[0-9]+}").Methods("GET").Handler(QueryHandle(env))
-    subRouter.PathPrefix("/get").Methods("GET").Handler(QueryHandle(env))
-	subRouter.PathPrefix("/{key}").Methods("GET").Handler(ApiHandler(env))
-	subRouter.Methods("GET").Handler(ApiHandler(env))
+	subRouter.PathPrefix("/get/{last:[0-9]+}").Methods("GET").Handler(QueryHandle(influxClient))
+    subRouter.PathPrefix("/get").Methods("GET").Handler(QueryHandle(influxClient))
+	subRouter.PathPrefix("/{key}").Methods("GET").Handler(ApiHandler())
+	subRouter.Methods("GET").Handler(ApiHandler())
 
 	// Routes on Router go here
 	router.PathPrefix("/").Handler(StaticServe("./app/"))
 }
 
 func StartServer() {
-	c, err := client.NewHTTPClient(client.HTTPConfig{
+	influxClient, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr: "http://localhost:8086",
 	})
 	if err != nil {
@@ -104,11 +108,11 @@ func StartServer() {
 	}
 	logger.Info.Println("InfluxDB client initialized")
 
-	r := mux.NewRouter()
-	r.StrictSlash(false)
+    router := mux.NewRouter()
+	router.StrictSlash(false)
 
-	AddApiRoutes(env, r)
+	AddApiRoutes(influxClient, router)
 
-	http.Handle("/", r)
+	http.Handle("/", router)
 	http.ListenAndServe(":8080", nil)
 }
