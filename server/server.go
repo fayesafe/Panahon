@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 
+	"Panahon/logger"
 	"github.com/gorilla/mux"
 	"github.com/influxdata/influxdb/client/v2"
-	"Panahon/logger"
 )
 
 type dbClient interface {
@@ -31,6 +31,44 @@ func ApiHandler() http.Handler {
 
 		if len(key) > 0 {
 			fmt.Fprintf(w, "\nKey: %s", key)
+		}
+	})
+}
+
+func QueryHandleInterval(influxClient dbClient) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		low, ok := vars["low"]
+		if !ok {
+			low = "0"
+		}
+		high, ok := vars["high"]
+		if !ok {
+			high = "2147483647"
+		}
+		logger.Info.Println(low, high)
+		q := client.NewQuery(
+			"SELECT * FROM meas WHERE time < "+
+				high+"s and time >"+low+"s", "test", "s")
+
+		response, err := influxClient.Query(q)
+		if err != nil {
+			logger.Error.Println(err)
+			http.Error(
+				w,
+				"Internal Server Error",
+				http.StatusInternalServerError)
+			return
+		} else {
+			for i := range response.Results {
+				payload, err := json.Marshal(response.Results[i])
+				if err != nil {
+					logger.Error.Println(err)
+				}
+				logger.Info.Println("Sending Payload: " + string(payload))
+				w.Header().Set("Content-Type", "application/json")
+				w.Write(payload)
+			}
 		}
 	})
 }
@@ -77,6 +115,15 @@ func AddApiRoutes(influxClient dbClient, router *mux.Router) {
 
 	// Subroutes on /api go here
 	subRouter := router.PathPrefix("/api").Subrouter()
+	subRouter.PathPrefix(
+		"/range/{low:[0-9]+}/{high:[0-9]+}").Methods("GET").Handler(
+		QueryHandleInterval(influxClient))
+	subRouter.PathPrefix(
+		"/range/{low:[0-9]+}").Methods("GET").Handler(
+		QueryHandleInterval(influxClient))
+	subRouter.PathPrefix(
+		"/range/").Methods("GET").Handler(
+		QueryHandleInterval(influxClient))
 	subRouter.PathPrefix(
 		"/get/{last:[0-9]+}").Methods("GET").Handler(QueryHandle(influxClient))
 	subRouter.PathPrefix(
