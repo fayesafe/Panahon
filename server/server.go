@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 
+	"Panahon/database"
 	"Panahon/logger"
 	"github.com/gorilla/mux"
 	"github.com/influxdata/influxdb/client/v2"
@@ -35,99 +37,78 @@ func ApiHandler() http.Handler {
 	})
 }
 
-func QueryHandleInterval(influxClient dbClient) http.Handler {
+func QueryHandleInterval() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+
 		low, ok := vars["low"]
-		if !ok {
+		_, errLow := strconv.Atoi(low)
+		if !ok || errLow != nil {
 			low = "0"
 		}
+
 		high, ok := vars["high"]
-		if !ok {
+		_, errHigh := strconv.Atoi(high)
+		if !ok || errHigh != nil {
 			high = "2147483647"
 		}
-		logger.Info.Println(low, high)
-		q := client.NewQuery(
-			"SELECT * FROM meas WHERE time < "+
-				high+"s and time >"+low+"s", "test", "s")
 
-		response, err := influxClient.Query(q)
-		if err != nil {
-			logger.Error.Println(err)
-			http.Error(
-				w,
-				"Internal Server Error",
-				http.StatusInternalServerError)
-			return
-		} else {
-			for i := range response.Results {
-				payload, err := json.Marshal(response.Results[i])
-				if err != nil {
-					logger.Error.Println(err)
-				}
-				logger.Info.Println("Sending Payload: " + string(payload))
-				w.Header().Set("Content-Type", "application/json")
-				w.Write(payload)
-			}
-		}
+		response, err := database.QueryInterval(low, high)
+		SendPayload(response, err, w)
 	})
 }
 
-func QueryHandle(influxClient dbClient) http.Handler {
+func QueryHandle() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var q client.Query
-
-		if index, ok := mux.Vars(r)["last"]; ok {
-			q = client.NewQuery(
-				"SELECT * FROM meas ORDER BY DESC LIMIT "+index,
-				"test",
-				"s")
-			logger.Info.Println("Getting last " + index + " entries")
-		} else {
-			q = client.NewQuery("SELECT * FROM meas", "test", "s")
-			logger.Info.Println("Calling route /api/get")
+		vars := mux.Vars(r)
+		offset := vars["last"]
+		if _, errOffset := strconv.Atoi(offset); errOffset != nil {
+			offset = ""
 		}
-
-		response, err := influxClient.Query(q)
-		if err != nil {
-			logger.Error.Println(err)
-			http.Error(
-				w,
-				"Internal Server Error",
-				http.StatusInternalServerError)
-			return
-		} else {
-			for i := range response.Results {
-				payload, err := json.Marshal(response.Results[i])
-				if err != nil {
-					logger.Error.Println(err)
-				}
-				logger.Info.Println("Sending Payload: " + string(payload))
-				w.Header().Set("Content-Type", "application/json")
-				w.Write(payload)
-			}
-		}
+		response, err := database.QueryAll(offset)
+		SendPayload(response, err, w)
 	})
 }
 
-func AddApiRoutes(influxClient dbClient, router *mux.Router) {
+func SendPayload(queryResponse *client.Response, err error, w http.ResponseWriter) {
+	if err != nil {
+		logger.Error.Println(err)
+		http.Error(
+			w,
+			"Internal Server Error",
+			http.StatusInternalServerError)
+		return
+	} else {
+		for i := range queryResponse.Results {
+			payload, err := json.Marshal(queryResponse.Results[i])
+			if err != nil {
+				logger.Error.Println(err)
+			}
+			logger.Info.Println("Sending Payload: " + string(payload))
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(payload)
+		}
+	}
+}
+
+func AddApiRoutes(router *mux.Router) {
 	logger.Info.Println("Adding routes to router/subrouter")
 
 	// Subroutes on /api go here
 	subRouter := router.PathPrefix("/api").Subrouter()
 	subRouter.PathPrefix(
 		"/range/{low:[0-9]+}/{high:[0-9]+}").Methods("GET").Handler(
-		QueryHandleInterval(influxClient))
+		QueryHandleInterval())
 	subRouter.PathPrefix(
 		"/range/{low:[0-9]+}").Methods("GET").Handler(
-		QueryHandleInterval(influxClient))
+		QueryHandleInterval())
 	subRouter.PathPrefix(
 		"/range/").Methods("GET").Handler(
-		QueryHandleInterval(influxClient))
+		QueryHandleInterval())
 	subRouter.PathPrefix(
-		"/get/{last:[0-9]+}").Methods("GET").Handler(QueryHandle(influxClient))
+		"/get/{last:[0-9]+}").Methods("GET").Handler(QueryHandle())
 	subRouter.PathPrefix(
-		"/get").Methods("GET").Handler(QueryHandle(influxClient))
+		"/get").Methods("GET").Handler(QueryHandle())
 	subRouter.PathPrefix(
 		"/{key}").Methods("GET").Handler(ApiHandler())
 	subRouter.Methods("GET").Handler(ApiHandler())
@@ -144,12 +125,13 @@ func StartServer() {
 		logger.Error.Println(err)
 		os.Exit(1)
 	}
+	database.Init(influxClient)
 	logger.Info.Println("InfluxDB client initialized")
 
 	router := mux.NewRouter()
 	router.StrictSlash(false)
 
-	AddApiRoutes(influxClient, router)
+	AddApiRoutes(router)
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", nil)
