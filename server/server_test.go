@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"Panahon/logger"
@@ -25,7 +26,6 @@ func (db MockInfluxDbHappy) Query(q client.Query) (*client.Response, error) {
 }
 
 func TestQueryOk(t *testing.T) {
-	SetupLogger()
 	mockInflux := MockInfluxDbHappy{}
 	queryHandle := QueryHandle(mockInflux)
 	req, _ := http.NewRequest("GET", "", nil)
@@ -40,7 +40,6 @@ func TestQueryOk(t *testing.T) {
 }
 
 func TestQueryError500(t *testing.T) {
-	SetupLogger()
 	mockInflux := MockInfluxDbError{}
 	queryHandle := QueryHandle(mockInflux)
 	req, _ := http.NewRequest("GET", "", nil)
@@ -49,6 +48,12 @@ func TestQueryError500(t *testing.T) {
 	if w.Code != http.StatusInternalServerError {
 		t.Errorf("Home page didn't return %v", http.StatusInternalServerError)
 	}
+}
+
+func TestMain(m *testing.M) {
+	SetupLogger()
+	exitStatus := m.Run()
+	os.Exit(exitStatus)
 }
 
 func SetupLogger() {
