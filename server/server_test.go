@@ -1,22 +1,23 @@
 package server
 
-import(
+import (
 	"errors"
 	"io/ioutil"
-    "net/http"
-    "net/http/httptest"
-    "testing"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"testing"
 
-	"github.com/influxdata/influxdb/client/v2"
+	"Panahon/database"
 	"Panahon/logger"
+	"github.com/influxdata/influxdb/client/v2"
 )
 
-type MockInfluxDbError struct {}
-type MockInfluxDbHappy struct {}
+type MockInfluxDbError struct{}
+type MockInfluxDbHappy struct{}
 
 func (db MockInfluxDbError) Query(q client.Query) (*client.Response, error) {
-	returnVal := new(client.Response)
-    return returnVal, errors.New("=== Test Error ===")
+	return nil, errors.New("=== Test Error ===")
 }
 
 func (db MockInfluxDbHappy) Query(q client.Query) (*client.Response, error) {
@@ -25,30 +26,83 @@ func (db MockInfluxDbHappy) Query(q client.Query) (*client.Response, error) {
 }
 
 func TestQueryOk(t *testing.T) {
-	SetupLogger()
 	mockInflux := MockInfluxDbHappy{}
-	queryHandle := QueryHandle(mockInflux)
+	database.Init(mockInflux)
+
+	queryHandle := QueryHandle()
 	req, _ := http.NewRequest("GET", "", nil)
-    w := httptest.NewRecorder()
-    queryHandle.ServeHTTP(w, req)
-    if w.Code != http.StatusOK {
-        t.Errorf("Home page didn't return %v", http.StatusOK)
-    }
+	w := httptest.NewRecorder()
+
+	t.Log("Querying all ...")
+	queryHandle.ServeHTTP(w, req)
+	t.Log(w.Code)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Home page didn't return %v", http.StatusOK)
+	}
 	if w.Body.String() != "" {
 		t.Errorf("Incorrect Body.")
 	}
 }
 
 func TestQueryError500(t *testing.T) {
+	mockInflux := MockInfluxDbError{}
+	database.Init(mockInflux)
+
+	queryHandle := QueryHandle()
+	req, _ := http.NewRequest("GET", "", nil)
+	w := httptest.NewRecorder()
+
+	t.Log("Querying all ...")
+	queryHandle.ServeHTTP(w, req)
+	t.Log(w.Code)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("Home page didn't return %v", http.StatusInternalServerError)
+	}
+}
+
+func TestQueryIntervalOk(t *testing.T) {
+	mockInflux := MockInfluxDbHappy{}
+	database.Init(mockInflux)
+
+	queryHandle := QueryHandleInterval()
+	req, _ := http.NewRequest("GET", "", nil)
+	w := httptest.NewRecorder()
+
+	t.Log("Querying range ...")
+	queryHandle.ServeHTTP(w, req)
+	t.Log(w.Code)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Home page didn't return %v", http.StatusOK)
+	}
+	if w.Body.String() != "" {
+		t.Errorf("Incorrect Body.")
+	}
+}
+
+func TestQueryErrorInterval500(t *testing.T) {
+	mockInflux := MockInfluxDbError{}
+	database.Init(mockInflux)
+
+	queryHandle := QueryHandleInterval()
+	req, _ := http.NewRequest("GET", "", nil)
+	w := httptest.NewRecorder()
+
+	t.Log("Querying range ...")
+	queryHandle.ServeHTTP(w, req)
+	t.Log(w.Code)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("Home page didn't return %v", http.StatusInternalServerError)
+	}
+}
+
+func TestMain(m *testing.M) {
 	SetupLogger()
-    mockInflux := MockInfluxDbError{}
-	queryHandle := QueryHandle(mockInflux)
-    req, _ := http.NewRequest("GET", "", nil)
-    w := httptest.NewRecorder()
-    queryHandle.ServeHTTP(w, req)
-    if w.Code != http.StatusInternalServerError {
-        t.Errorf("Home page didn't return %v", http.StatusInternalServerError)
-    }
+	exitStatus := m.Run()
+	os.Exit(exitStatus)
 }
 
 func SetupLogger() {
