@@ -47,14 +47,12 @@ func QueryHandleInterval() http.Handler {
 		vars := mux.Vars(r)
 
 		low, ok := vars["low"]
-		_, errLow := strconv.Atoi(low)
-		if !ok || errLow != nil {
+		if !ok || !IsStringNum(low) {
 			low = "0"
 		}
 
 		high, ok := vars["high"]
-		_, errHigh := strconv.Atoi(high)
-		if !ok || errHigh != nil {
+		if !ok || !IsStringNum(high) {
 			high = "2147483647"
 		}
 
@@ -73,13 +71,14 @@ func QueryHandleInterval() http.Handler {
 
 // QueryHandle is a HTTP handler for querying all / last n entries
 // using database API
-func QueryHandle() http.Handler {
+func QueryHandleLast() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		offset := vars["last"]
-		if _, errOffset := strconv.Atoi(offset); errOffset != nil {
+		if !IsStringNum(offset) {
 			offset = ""
 		}
+
 		response, err := database.QueryAll(offset)
 		if err != nil {
 			logger.Error.Println(err)
@@ -107,31 +106,12 @@ func SendPayload(queryResponse *client.Response, w http.ResponseWriter) {
 	}
 }
 
-// AddAPIRoutes adds routes and subroutes on router
-func AddAPIRoutes(router *mux.Router) {
-	logger.Info.Println("Adding routes to router/subrouter")
-
-	// Subroutes on /api go here
-	subRouter := router.PathPrefix("/api").Subrouter()
-	subRouter.PathPrefix(
-		"/range/{low:[0-9]+}/{high:[0-9]+}").Methods("GET").Handler(
-		QueryHandleInterval())
-	subRouter.PathPrefix(
-		"/range/{low:[0-9]+}").Methods("GET").Handler(
-		QueryHandleInterval())
-	subRouter.PathPrefix(
-		"/range/").Methods("GET").Handler(
-		QueryHandleInterval())
-	subRouter.PathPrefix(
-		"/get/{last:[0-9]+}").Methods("GET").Handler(QueryHandle())
-	subRouter.PathPrefix(
-		"/get").Methods("GET").Handler(QueryHandle())
-	subRouter.PathPrefix(
-		"/{key}").Methods("GET").Handler(APIHandler())
-	subRouter.Methods("GET").Handler(APIHandler())
-
-	// Routes on Router go here
-	router.PathPrefix("/").Handler(StaticServe("./app/"))
+// IsStringNum checks if a string is a representation of a number
+func IsStringNum(strToCheck string) bool {
+	if _, err := strconv.Atoi(strToCheck); err != nil {
+		return false
+	}
+	return true
 }
 
 // StartServer starts server
@@ -149,6 +129,7 @@ func StartServer() {
 	router := mux.NewRouter()
 	router.StrictSlash(false)
 
+	logger.Info.Println("Adding routes to router/subrouter")
 	AddAPIRoutes(router)
 
 	http.Handle("/", router)
