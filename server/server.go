@@ -17,12 +17,15 @@ type dbClient interface {
 	Query(q client.Query) (*client.Response, error)
 }
 
+// StaticServe serving front end application of the weather station
+// Takes path as argument, pointing to root dir of the app
 func StaticServe(path string) http.Handler {
 	logger.Info.Println("Serving static content: " + path + " on route /")
 	return http.FileServer(http.Dir(path))
 }
 
-func ApiHandler() http.Handler {
+// APIHandler is th first serving point of the API
+func APIHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "API is alive.")
 
@@ -37,6 +40,8 @@ func ApiHandler() http.Handler {
 	})
 }
 
+// QueryHandleInterval is a HTTP handler for querying an interval of time
+// using database API
 func QueryHandleInterval() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -54,10 +59,20 @@ func QueryHandleInterval() http.Handler {
 		}
 
 		response, err := database.QueryInterval(low, high)
-		SendPayload(response, err, w)
+		if err != nil {
+			logger.Error.Println(err)
+			http.Error(
+				w,
+				"Internal Server Error",
+				http.StatusInternalServerError)
+		} else {
+			SendPayload(response, w)
+		}
 	})
 }
 
+// QueryHandle is a HTTP handler for querying all / last n entries
+// using database API
 func QueryHandle() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -66,32 +81,34 @@ func QueryHandle() http.Handler {
 			offset = ""
 		}
 		response, err := database.QueryAll(offset)
-		SendPayload(response, err, w)
+		if err != nil {
+			logger.Error.Println(err)
+			http.Error(
+				w,
+				"Internal Server Error",
+				http.StatusInternalServerError)
+		} else {
+			SendPayload(response, w)
+		}
 	})
 }
 
-func SendPayload(queryResponse *client.Response, err error, w http.ResponseWriter) {
-	if err != nil {
-		logger.Error.Println(err)
-		http.Error(
-			w,
-			"Internal Server Error",
-			http.StatusInternalServerError)
-		return
-	} else {
-		for i := range queryResponse.Results {
-			payload, err := json.Marshal(queryResponse.Results[i])
-			if err != nil {
-				logger.Error.Println(err)
-			}
-			logger.Info.Println("Sending Payload: " + string(payload))
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(payload)
+// SendPayload is sending received data from query as JSON
+// taking response and respective writer as input
+func SendPayload(queryResponse *client.Response, w http.ResponseWriter) {
+	for i := range queryResponse.Results {
+		payload, err := json.Marshal(queryResponse.Results[i])
+		if err != nil {
+			logger.Error.Println(err)
 		}
+		logger.Info.Println("Sending Payload: " + string(payload))
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(payload)
 	}
 }
 
-func AddApiRoutes(router *mux.Router) {
+// AddAPIRoutes adds routes and subroutes on router
+func AddAPIRoutes(router *mux.Router) {
 	logger.Info.Println("Adding routes to router/subrouter")
 
 	// Subroutes on /api go here
@@ -110,13 +127,14 @@ func AddApiRoutes(router *mux.Router) {
 	subRouter.PathPrefix(
 		"/get").Methods("GET").Handler(QueryHandle())
 	subRouter.PathPrefix(
-		"/{key}").Methods("GET").Handler(ApiHandler())
-	subRouter.Methods("GET").Handler(ApiHandler())
+		"/{key}").Methods("GET").Handler(APIHandler())
+	subRouter.Methods("GET").Handler(APIHandler())
 
 	// Routes on Router go here
 	router.PathPrefix("/").Handler(StaticServe("./app/"))
 }
 
+// StartServer starts server
 func StartServer() {
 	influxClient, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr: "http://localhost:8086",
@@ -131,7 +149,7 @@ func StartServer() {
 	router := mux.NewRouter()
 	router.StrictSlash(false)
 
-	AddApiRoutes(router)
+	AddAPIRoutes(router)
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", nil)

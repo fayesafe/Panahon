@@ -5,12 +5,14 @@ import (
 	"log"
 )
 
+// global variables holding loggers
 var (
 	Info    *log.Logger
 	Warning *log.Logger
 	Error   *log.Logger
 )
 
+// Init of Logger
 func Init(
 	infoHandle io.Writer,
 	warningHandle io.Writer,

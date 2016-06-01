@@ -9,8 +9,10 @@ type dbClient interface {
 	Query(q client.Query) (*client.Response, error)
 }
 
+// Global variable of the database client
 var influxClient dbClient
 
+// QueryAll queries all entries of Influx DB, or last n entries
 func QueryAll(offset string) (*client.Response, error) {
 	var q client.Query
 
@@ -29,6 +31,7 @@ func QueryAll(offset string) (*client.Response, error) {
 	return response, err
 }
 
+// QueryInterval queries Influx DB for an interval of time
 func QueryInterval(low string, high string) (*client.Response, error) {
 	logger.Info.Println(low, high)
 	q := client.NewQuery(
@@ -39,6 +42,7 @@ func QueryInterval(low string, high string) (*client.Response, error) {
 	return response, err
 }
 
+// Init of database client
 func Init(influxConn dbClient) {
 	influxClient = influxConn
 }

@@ -8,6 +8,7 @@ import (
 	"Panahon/station"
 )
 
+// main is the Main Function of the Program
 func main() {
 	logger.Init(os.Stdout, os.Stdout, os.Stderr)
 	logger.Info.Println("Logger initialized")
