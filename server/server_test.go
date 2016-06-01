@@ -29,7 +29,7 @@ func TestQueryOk(t *testing.T) {
 	mockInflux := MockInfluxDbHappy{}
 	database.Init(mockInflux)
 
-	queryHandle := QueryHandle()
+	queryHandle := QueryHandleLast()
 	req, _ := http.NewRequest("GET", "", nil)
 	w := httptest.NewRecorder()
 
@@ -49,7 +49,7 @@ func TestQueryError500(t *testing.T) {
 	mockInflux := MockInfluxDbError{}
 	database.Init(mockInflux)
 
-	queryHandle := QueryHandle()
+	queryHandle := QueryHandleLast()
 	req, _ := http.NewRequest("GET", "", nil)
 	w := httptest.NewRecorder()
 

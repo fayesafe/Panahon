@@ -87,11 +87,14 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func CheckResponseEquality(respObj *client.Response, compObj *client.Response) bool {
+func CheckResponseEquality(
+	respObj *client.Response,
+	compObj *client.Response) bool {
 	if respObj == nil {
 		return false
 	}
-	if !(reflect.DeepEqual(respObj.Results, compObj.Results)) || respObj.Err != compObj.Err {
+	if !(reflect.DeepEqual(respObj.Results, compObj.Results)) ||
+		respObj.Err != compObj.Err {
 		return false
 	}
 	return true
