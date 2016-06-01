@@ -14,6 +14,7 @@ type Route struct {
 
 type Routes []Route
 
+// routes contains all routes of the API
 var routes = Routes{
 	Route{
 		"RangeHighLow",
@@ -61,7 +62,6 @@ var routes = Routes{
 
 // AddAPIRoutes adds routes and subroutes on router
 func AddAPIRoutes(router *mux.Router) {
-	// Subroutes on /api go here
 	subRouter := router.PathPrefix("/api").Subrouter()
 	for _, i := range routes {
 		subRouter.
@@ -71,6 +71,5 @@ func AddAPIRoutes(router *mux.Router) {
 			Handler(i.Handler)
 	}
 
-	// Routes on Router go here
 	router.PathPrefix("/").Handler(StaticServe("./app/"))
 }
