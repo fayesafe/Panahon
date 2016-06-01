@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 
 	"Panahon/database"
@@ -116,16 +115,6 @@ func IsStringNum(strToCheck string) bool {
 
 // StartServer starts server
 func StartServer() {
-	influxClient, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr: "http://localhost:8086",
-	})
-	if err != nil {
-		logger.Error.Println(err)
-		os.Exit(1)
-	}
-	database.Init(influxClient)
-	logger.Info.Println("InfluxDB client initialized")
-
 	router := mux.NewRouter()
 	router.StrictSlash(false)
 
