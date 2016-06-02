@@ -1,0 +1,10 @@
+app_port = "8080"
+
+[database]
+server = "localhost"
+port = "8086"
+root_db = "test"
+series = "meas"
+
+[app]
+path = "./app/"

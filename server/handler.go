@@ -19,7 +19,7 @@ type dbClient interface {
 // StaticServe serving front end application of the weather station
 // Takes path as argument, pointing to root dir of the app
 func StaticServe(path string) http.Handler {
-	logger.Info.Println("Serving static content: " + path + " on route /")
+	logger.Info.Printf("Serving static content: %s on route /", path)
 	return http.FileServer(http.Dir(path))
 }
 
@@ -31,7 +31,7 @@ func APIHandler() http.Handler {
 		vars := mux.Vars(r)
 		key := vars["key"]
 
-		logger.Info.Println("Calling route /api/" + key)
+		logger.Info.Printf("Calling route /api/%s", key)
 
 		if len(key) > 0 {
 			fmt.Fprintf(w, "\nKey: %s", key)
@@ -99,7 +99,7 @@ func SendPayload(queryResponse *client.Response, w http.ResponseWriter) {
 		if err != nil {
 			logger.Error.Println(err)
 		}
-		logger.Info.Println("Sending Payload: " + string(payload))
+		logger.Info.Printf("Sending Payload: %s", string(payload))
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(payload)
 	}
@@ -114,13 +114,15 @@ func IsStringNum(strToCheck string) bool {
 }
 
 // StartServer starts server
-func StartServer() {
+func StartServer(appPort string, staticPath string) {
 	router := mux.NewRouter()
 	router.StrictSlash(false)
 
 	logger.Info.Println("Adding routes to router/subrouter")
 	AddAPIRoutes(router)
+	logger.Info.Printf("Serving static content of dir: %s", staticPath)
+	router.PathPrefix("/").Handler(StaticServe(staticPath))
 
 	http.Handle("/", router)
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":"+appPort, nil)
 }
