@@ -10,7 +10,11 @@ type dbClient interface {
 }
 
 // Global variable of the database client
-var influxClient dbClient
+var (
+	influxClient dbClient
+	influxDatabase string
+	influxSeries string
+)
 
 // QueryAll queries all entries of Influx DB, or last n entries
 func QueryAll(offset string) (*client.Response, error) {
@@ -18,12 +22,15 @@ func QueryAll(offset string) (*client.Response, error) {
 
 	if offset != "" {
 		q = client.NewQuery(
-			"SELECT * FROM meas ORDER BY DESC LIMIT "+offset,
-			"test",
+			"SELECT * FROM"+influxSeries+"ORDER BY DESC LIMIT "+offset,
+			influxDatabase,
 			"s")
 		logger.Info.Printf("Getting last %s entries", offset)
 	} else {
-		q = client.NewQuery("SELECT * FROM meas", "test", "s")
+		q = client.NewQuery(
+			"SELECT * FROM " + influxSeries,
+			influxDatabase,
+			"s")
 		logger.Info.Println("Calling route /api/get")
 	}
 
@@ -34,8 +41,8 @@ func QueryAll(offset string) (*client.Response, error) {
 // QueryInterval queries Influx DB for an interval of time
 func QueryInterval(low string, high string) (*client.Response, error) {
 	q := client.NewQuery(
-		"SELECT * FROM meas WHERE time < "+
-			high+"s and time >"+low+"s", "test", "s")
+		"SELECT * FROM "+influxSeries+" WHERE time < "+
+			high+"s and time >"+low+"s", influxDatabase, "s")
 	logger.Info.Printf(
 		"Getting entries from timestamp %s to %s", low, high)
 	response, err := influxClient.Query(q)
@@ -43,6 +50,8 @@ func QueryInterval(low string, high string) (*client.Response, error) {
 }
 
 // Init of database client
-func Init(influxConn dbClient) {
+func Init(influxConn dbClient, database string, series string) {
 	influxClient = influxConn
+	influxDatabase = database
+	influxSeries = series
 }

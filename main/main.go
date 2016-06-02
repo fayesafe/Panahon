@@ -20,7 +20,7 @@ type Config struct {
 type Database struct {
 	Server string
 	Port   string
-	RootDB string
+	RootDB string `toml:"root_db"`
 	Series string
 }
 
@@ -56,11 +56,13 @@ func main() {
 		logger.Error.Fatalln(err)
 	}
 
-	database.Init(influxClient)
+	database.Init(influxClient, config.DB.RootDB, config.DB.Series)
 	logger.Info.Printf(
-		"InfluxDB client initialized on %s:%s",
+		"InfluxDB client initialized on %s:%s, DB: %s, Series: %s",
 		config.DB.Server,
-		config.DB.Port)
+		config.DB.Port,
+		config.DB.RootDB,
+		config.DB.Series)
 
 	go station.TestRoutine()
 	server.StartServer(config.AppPort, config.App.Path)
