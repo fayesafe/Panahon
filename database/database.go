@@ -11,9 +11,9 @@ type dbClient interface {
 
 // Global variable of the database client
 var (
-	influxClient dbClient
+	influxClient   dbClient
 	influxDatabase string
-	influxSeries string
+	influxSeries   string
 )
 
 // QueryAll queries all entries of Influx DB, or last n entries
@@ -28,7 +28,7 @@ func QueryAll(offset string) (*client.Response, error) {
 		logger.Info.Printf("Getting last %s entries", offset)
 	} else {
 		q = client.NewQuery(
-			"SELECT * FROM " + influxSeries,
+			"SELECT * FROM "+influxSeries,
 			influxDatabase,
 			"s")
 		logger.Info.Println("Calling route /api/get")

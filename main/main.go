@@ -62,7 +62,8 @@ func main() {
 		config.DB.Server,
 		config.DB.Port,
 		config.DB.RootDB,
-		config.DB.Series)
+		config.DB.Series,
+	)
 
 	go station.TestRoutine()
 	server.StartServer(config.AppPort, config.App.Path)
