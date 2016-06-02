@@ -20,48 +20,48 @@ var routes = Routes{
 		"RangeHighLow",
 		"GET",
 		"/range/{low:[0-9]+}/{high:[0-9]+}",
-		QueryHandleInterval(),
+		queryHandleInterval(),
 	},
 	Route{
 		"RangeLowOnly",
 		"GET",
 		"/range/{low:[0-9]+}",
-		QueryHandleInterval(),
+		queryHandleInterval(),
 	},
 	Route{
 		"Range",
 		"GET",
 		"/range",
-		QueryHandleInterval(),
+		queryHandleInterval(),
 	},
 	Route{
 		"LastN",
 		"GET",
 		"/last/{last:[0-9]+}",
-		QueryHandleLast(),
+		queryHandleLast(),
 	},
 	Route{
 		"Last",
 		"GET",
 		"/last",
-		QueryHandleLast(),
+		queryHandleLast(),
 	},
 	Route{
 		"GeneralApiWithKey",
 		"GET",
 		"/{key}",
-		APIHandler(),
+		apiHandler(),
 	},
 	Route{
 		"GeneralApi",
 		"GET",
 		"/",
-		APIHandler(),
+		apiHandler(),
 	},
 }
 
 // AddAPIRoutes adds routes and subroutes on router
-func AddAPIRoutes(router *mux.Router) {
+func addAPIRoutes(router *mux.Router) {
 	subRouter := router.PathPrefix("/api").Subrouter()
 	for _, i := range routes {
 		subRouter.
