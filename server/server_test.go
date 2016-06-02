@@ -27,9 +27,9 @@ func (db MockInfluxDbHappy) Query(q client.Query) (*client.Response, error) {
 
 func TestQueryOk(t *testing.T) {
 	mockInflux := MockInfluxDbHappy{}
-	database.Init(mockInflux)
+	database.Init(mockInflux, "", "")
 
-	queryHandle := QueryHandleLast()
+	queryHandle := queryHandleLast()
 	req, _ := http.NewRequest("GET", "", nil)
 	w := httptest.NewRecorder()
 
@@ -47,9 +47,9 @@ func TestQueryOk(t *testing.T) {
 
 func TestQueryError500(t *testing.T) {
 	mockInflux := MockInfluxDbError{}
-	database.Init(mockInflux)
+	database.Init(mockInflux, "", "")
 
-	queryHandle := QueryHandleLast()
+	queryHandle := queryHandleLast()
 	req, _ := http.NewRequest("GET", "", nil)
 	w := httptest.NewRecorder()
 
@@ -64,9 +64,9 @@ func TestQueryError500(t *testing.T) {
 
 func TestQueryIntervalOk(t *testing.T) {
 	mockInflux := MockInfluxDbHappy{}
-	database.Init(mockInflux)
+	database.Init(mockInflux, "", "")
 
-	queryHandle := QueryHandleInterval()
+	queryHandle := queryHandleInterval()
 	req, _ := http.NewRequest("GET", "", nil)
 	w := httptest.NewRecorder()
 
@@ -82,11 +82,48 @@ func TestQueryIntervalOk(t *testing.T) {
 	}
 }
 
-func TestQueryErrorInterval500(t *testing.T) {
+func TestQueryIntervalError500(t *testing.T) {
 	mockInflux := MockInfluxDbError{}
-	database.Init(mockInflux)
+	database.Init(mockInflux, "", "")
 
-	queryHandle := QueryHandleInterval()
+	queryHandle := queryHandleInterval()
+	req, _ := http.NewRequest("GET", "", nil)
+	w := httptest.NewRecorder()
+
+	t.Log("Querying range ...")
+	queryHandle.ServeHTTP(w, req)
+	t.Log(w.Code)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("Home page didn't return %v", http.StatusInternalServerError)
+	}
+}
+
+func TestQueryAverageOk(t *testing.T) {
+	mockInflux := MockInfluxDbHappy{}
+	database.Init(mockInflux, "", "")
+
+	queryHandle := queryHandleAverage()
+	req, _ := http.NewRequest("GET", "", nil)
+	w := httptest.NewRecorder()
+
+	t.Log("Querying range ...")
+	queryHandle.ServeHTTP(w, req)
+	t.Log(w.Code)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Home page didn't return %v", http.StatusOK)
+	}
+	if w.Body.String() != "" {
+		t.Errorf("Incorrect Body.")
+	}
+}
+
+func TestQueryAverageError500(t *testing.T) {
+	mockInflux := MockInfluxDbError{}
+	database.Init(mockInflux, "", "")
+
+	queryHandle := queryHandleAverage()
 	req, _ := http.NewRequest("GET", "", nil)
 	w := httptest.NewRecorder()
 

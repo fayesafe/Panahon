@@ -17,6 +17,18 @@ type Routes []Route
 // routes contains all routes of the API
 var routes = Routes{
 	Route{
+		"Average",
+		"GET",
+		"/av/{col:[a-z]+}/{interval:[0-9]+}/{unit:(ms)|[usmhdw]}/{offset:[0-9]+}",
+		queryHandleAverage(),
+	},
+	Route{
+		"Average",
+		"GET",
+		"/av/{col:[a-z]+}/{interval:[0-9]+}/{unit:(ms)|[usmhdw]}",
+		queryHandleAverage(),
+	},
+	Route{
 		"RangeHighLow",
 		"GET",
 		"/range/{low:[0-9]+}/{high:[0-9]+}",

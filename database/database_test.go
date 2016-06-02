@@ -82,6 +82,34 @@ func TestQueryRangeError(t *testing.T) {
 	}
 }
 
+func TestQueryAverageHappy(t *testing.T) {
+	mockInflux := MockInfluxDbHappy{}
+	SetupDatabaseMock(mockInflux)
+	response, err := QueryAverage("42", "42", "42")
+	t.Log("Checking Error ...")
+	if err != nil {
+		t.Errorf("Error thrown")
+	}
+	t.Log("Checking Response ...")
+	if !CheckResponseEquality(response, new(client.Response)) {
+		t.Errorf("Result not Equal")
+	}
+}
+
+func TestQueryAverageError(t *testing.T) {
+	mockInflux := MockInfluxDbError{}
+	SetupDatabaseMock(mockInflux)
+	response, err := QueryAverage("42", "42", "42")
+	t.Log("Checking Error ...")
+	if err == nil {
+		t.Errorf("No Error thrown")
+	}
+	t.Log("Checking Response ...")
+	if CheckResponseEquality(response, new(client.Response)) {
+		t.Errorf("No Empty Response")
+	}
+}
+
 func TestMain(m *testing.M) {
 	logger.Init(ioutil.Discard, ioutil.Discard, ioutil.Discard)
 	m.Run()
@@ -101,5 +129,5 @@ func CheckResponseEquality(
 }
 
 func SetupDatabaseMock(databaseMock InfluxMock) {
-	Init(databaseMock)
+	Init(databaseMock, "", "")
 }

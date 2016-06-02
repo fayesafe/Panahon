@@ -1,6 +1,8 @@
 package database
 
 import (
+	"fmt"
+
 	"Panahon/logger"
 	"github.com/influxdata/influxdb/client/v2"
 )
@@ -21,32 +23,50 @@ func QueryAll(offset string) (*client.Response, error) {
 	var q client.Query
 
 	if offset != "" {
-		q = client.NewQuery(
-			"SELECT * FROM "+influxSeries+" ORDER BY DESC LIMIT "+offset,
-			influxDatabase,
-			"s")
+		query := fmt.Sprintf(
+			"SELECT * FROM %s ORDER BY DESC LIMIT %s",
+			influxSeries,
+			offset)
+		q = client.NewQuery(query, influxDatabase, "s")
 		logger.Info.Printf("Getting last %s entries", offset)
 	} else {
-		q = client.NewQuery(
-			"SELECT * FROM "+influxSeries,
-			influxDatabase,
-			"s")
+		query := fmt.Sprintf("SELECT * FROM %s", influxSeries)
+		q = client.NewQuery(query, influxDatabase, "s")
 		logger.Info.Println("Calling route /api/get")
 	}
 
-	response, err := influxClient.Query(q)
-	return response, err
+	return influxClient.Query(q)
 }
 
 // QueryInterval queries Influx DB for an interval of time
 func QueryInterval(low string, high string) (*client.Response, error) {
-	q := client.NewQuery(
-		"SELECT * FROM "+influxSeries+" WHERE time < "+
-			high+"s and time >"+low+"s", influxDatabase, "s")
+	query := fmt.Sprintf(
+		"SELECT * FROM %s WHERE time < %ss AND time > %ss",
+		influxSeries,
+		high,
+		low)
+
+	q := client.NewQuery(query, influxDatabase, "s")
 	logger.Info.Printf(
 		"Getting entries from timestamp %s to %s", low, high)
-	response, err := influxClient.Query(q)
-	return response, err
+	return influxClient.Query(q)
+}
+
+// QueryAverage queries the average for given cols on a given interval
+func QueryAverage(
+	col string,
+	interval string,
+	offset string) (*client.Response, error) {
+	query := fmt.Sprintf(
+		"SELECT mean(%s) FROM %s WHERE time > %ss GROUP BY time(%s)",
+		col,
+		influxSeries,
+		offset,
+		interval)
+	
+	q := client.NewQuery(query, influxDatabase, "s")
+	logger.Info.Println("Getting average from %s of col %s", offset, col)
+	return influxClient.Query(q)
 }
 
 // Init of database client

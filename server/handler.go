@@ -73,12 +73,38 @@ func queryHandleInterval() http.Handler {
 func queryHandleLast() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		offset := vars["last"]
-		if !isStringNum(offset) {
+		offset, ok := vars["last"]
+		if !ok || !isStringNum(offset) {
 			offset = ""
 		}
 
 		response, err := database.QueryAll(offset)
+		if err != nil {
+			logger.Error.Println(err)
+			http.Error(
+				w,
+				"Internal Server Error",
+				http.StatusInternalServerError)
+		} else {
+			sendPayload(response, w)
+		}
+	})
+}
+
+// queryAverage returns the average for a specific interval starting from an
+// offset
+func queryHandleAverage() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		offset, ok := vars["offset"]
+		if !ok || !isStringNum(offset) {
+			offset = "0"
+		}
+		interval := vars["interval"]
+		unit := vars["unit"]
+		col := vars["col"]
+
+		response, err := database.QueryAverage(col, interval + unit, offset)
 		if err != nil {
 			logger.Error.Println(err)
 			http.Error(
