@@ -7,25 +7,57 @@ import (
 	"Panahon/logger"
 	"Panahon/server"
 	"Panahon/station"
+	"github.com/BurntSushi/toml"
 	"github.com/influxdata/influxdb/client/v2"
 )
+
+type Config struct {
+	AppPort string      `toml:"app_port"`
+	DB      Database    `toml:"database"`
+	App     Application `toml:"app"`
+}
+
+type Database struct {
+	Server string
+	Port   string
+	RootDB string
+	Series string
+}
+
+type Application struct {
+	Path string
+}
+
+func ParseConfig(configPath string, config *Config) {
+	_, err := toml.DecodeFile(configPath, config)
+	if err != nil {
+		logger.Error.Fatalln("Error while parsing Config File")
+	}
+}
 
 // main is the Main Function of the Program
 func main() {
 	logger.Init(os.Stdout, os.Stdout, os.Stderr)
 	logger.Info.Println("Logger initialized")
 
+	config := new(Config)
+	ParseConfig("./config.toml", config)
+
+	logger.Info.Println("Config file parsed, config set")
+
 	influxClient, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr: "http://localhost:8086",
+		Addr: "http://" + config.DB.Server + ":" + config.DB.Port,
 	})
 	if err != nil {
-		logger.Error.Println(err)
-		os.Exit(1)
+		logger.Error.Fatalln(err)
 	}
 
 	database.Init(influxClient)
-	logger.Info.Println("InfluxDB client initialized")
+	logger.Info.Printf(
+		"InfluxDB client initialized on %s:%s",
+		config.DB.Server,
+		config.DB.Port)
 
 	go station.TestRoutine()
-	server.StartServer()
+	server.StartServer(config.AppPort, config.App.Path)
 }

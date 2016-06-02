@@ -21,7 +21,7 @@ func QueryAll(offset string) (*client.Response, error) {
 			"SELECT * FROM meas ORDER BY DESC LIMIT "+offset,
 			"test",
 			"s")
-		logger.Info.Println("Getting last " + offset + " entries")
+		logger.Info.Printf("Getting last %s entries", offset)
 	} else {
 		q = client.NewQuery("SELECT * FROM meas", "test", "s")
 		logger.Info.Println("Calling route /api/get")
@@ -33,11 +33,11 @@ func QueryAll(offset string) (*client.Response, error) {
 
 // QueryInterval queries Influx DB for an interval of time
 func QueryInterval(low string, high string) (*client.Response, error) {
-	logger.Info.Println(low, high)
 	q := client.NewQuery(
 		"SELECT * FROM meas WHERE time < "+
 			high+"s and time >"+low+"s", "test", "s")
-
+	logger.Info.Printf(
+		"Getting entries from timestamp %s to %s", low, high)
 	response, err := influxClient.Query(q)
 	return response, err
 }

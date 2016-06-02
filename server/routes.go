@@ -70,5 +70,4 @@ func AddAPIRoutes(router *mux.Router) {
 			Name(i.Name).
 			Handler(i.Handler)
 	}
-	router.PathPrefix("/").Handler(StaticServe("./app/"))
 }
