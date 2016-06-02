@@ -11,18 +11,42 @@ import (
 	"Panahon/database"
 	"Panahon/logger"
 	"github.com/influxdata/influxdb/client/v2"
+	"github.com/influxdata/influxdb/models"
+	"github.com/drewolson/testflight"
 )
 
 type MockInfluxDbError struct{}
 type MockInfluxDbHappy struct{}
+
+var expectedResponse string = `{"Series":[{"name":"Test","tags":{"test":"test"},"columns":["test","test"]}],"Messages":null,"error":"test"}`
 
 func (db MockInfluxDbError) Query(q client.Query) (*client.Response, error) {
 	return nil, errors.New("=== Test Error ===")
 }
 
 func (db MockInfluxDbHappy) Query(q client.Query) (*client.Response, error) {
-	returnVal := new(client.Response)
-	return returnVal, nil
+	tags := map[string]string{
+		"test":"test",
+	}
+	result := models.Row{
+		Name: "Test",
+		Tags: tags,
+		Columns: []string{"test", "test"},
+		Values: nil,
+		Err: nil,
+	}
+	results := []client.Result{
+		client.Result{
+			Series: []models.Row{result},
+			Messages: nil,
+			Err: "test",
+		},
+	}
+	returnVal := client.Response{
+		Results: results,
+		Err: "no error",
+	}
+	return &returnVal, nil
 }
 
 func TestQueryOk(t *testing.T) {
@@ -40,7 +64,7 @@ func TestQueryOk(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Errorf("Home page didn't return %v", http.StatusOK)
 	}
-	if w.Body.String() != "" {
+	if w.Body.String() != expectedResponse {
 		t.Errorf("Incorrect Body.")
 	}
 }
@@ -77,7 +101,7 @@ func TestQueryIntervalOk(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Errorf("Home page didn't return %v", http.StatusOK)
 	}
-	if w.Body.String() != "" {
+	if w.Body.String() != expectedResponse {
 		t.Errorf("Incorrect Body.")
 	}
 }
@@ -114,7 +138,7 @@ func TestQueryAverageOk(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Errorf("Home page didn't return %v", http.StatusOK)
 	}
-	if w.Body.String() != "" {
+	if w.Body.String() != expectedResponse {
 		t.Errorf("Incorrect Body.")
 	}
 }
@@ -134,6 +158,38 @@ func TestQueryAverageError500(t *testing.T) {
 	if w.Code != http.StatusInternalServerError {
 		t.Errorf("Home page didn't return %v", http.StatusInternalServerError)
 	}
+}
+
+func TestQueryLastHTTPOk(t *testing.T) {
+	mockInflux := MockInfluxDbHappy{}
+	database.Init(mockInflux, "", "")
+
+	testflight.WithServer(queryHandleLast(), func(r *testflight.Requester) {
+        response := r.Get("/last")
+		t.Log("Checking Response")
+		if response.StatusCode != 200 {
+			t.Errorf("Status Code not 200")
+		}
+		if response.Body != expectedResponse {
+			t.Errorf("Wrong Body")
+		}
+    })
+}
+
+func TestQueryLastHTTPError(t *testing.T) {
+	mockInflux := MockInfluxDbError{}
+	database.Init(mockInflux, "", "")
+
+	testflight.WithServer(queryHandleLast(), func(r *testflight.Requester) {
+        response := r.Get("/last")
+		t.Log("Checking Response")
+		if response.StatusCode != 500 {
+			t.Errorf("Status Code not 500")
+		}
+		if response.Body != "Internal Server Error\n" {
+			t.Errorf("Body not empty")
+		}
+    })
 }
 
 func TestMain(m *testing.M) {
