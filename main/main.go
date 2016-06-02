@@ -28,7 +28,7 @@ type Application struct {
 	Path string
 }
 
-func ParseConfig(configPath string, config *Config) error {
+func parseConfig(configPath string, config *Config) error {
 	_, err := toml.DecodeFile(configPath, config)
 	if err != nil {
 		return err
@@ -42,7 +42,7 @@ func main() {
 	logger.Info.Println("Logger initialized")
 
 	config := new(Config)
-	err := ParseConfig("./config.toml", config)
+	err := parseConfig("./config.toml", config)
 	if err != nil {
 		logger.Error.Fatalf("Error while parsing Config File: %s", err)
 	}

@@ -22,7 +22,7 @@ func QueryAll(offset string) (*client.Response, error) {
 
 	if offset != "" {
 		q = client.NewQuery(
-			"SELECT * FROM"+influxSeries+"ORDER BY DESC LIMIT "+offset,
+			"SELECT * FROM "+influxSeries+" ORDER BY DESC LIMIT "+offset,
 			influxDatabase,
 			"s")
 		logger.Info.Printf("Getting last %s entries", offset)
