@@ -28,11 +28,12 @@ type Application struct {
 	Path string
 }
 
-func ParseConfig(configPath string, config *Config) {
+func ParseConfig(configPath string, config *Config) error {
 	_, err := toml.DecodeFile(configPath, config)
 	if err != nil {
-		logger.Error.Fatalln("Error while parsing Config File")
+		return err
 	}
+	return nil
 }
 
 // main is the Main Function of the Program
@@ -41,7 +42,10 @@ func main() {
 	logger.Info.Println("Logger initialized")
 
 	config := new(Config)
-	ParseConfig("./config.toml", config)
+	err := ParseConfig("./config.toml", config)
+	if err != nil {
+		logger.Error.Fatalf("Error while parsing Config File: %s", err)
+	}
 
 	logger.Info.Println("Config file parsed, config set")
 
