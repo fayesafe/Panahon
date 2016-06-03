@@ -6,14 +6,15 @@ import (
 	"net/http"
 	"strconv"
 
-	"Panahon/database"
 	"Panahon/logger"
 	"github.com/gorilla/mux"
 	"github.com/influxdata/influxdb/client/v2"
 )
 
 type dbClient interface {
-	Query(q client.Query) (*client.Response, error)
+	QueryAll(offset string) (*client.Response, error)
+	QueryInterval(low string, high string) (*client.Response, error)
+	QueryAverage(col string, interval string, offset string) (*client.Response, error)
 }
 
 // staticServe serving front end application of the weather station
@@ -41,7 +42,7 @@ func apiHandler() http.Handler {
 
 // queryHandleInterval is a HTTP handler for querying an interval of time
 // using database API
-func queryHandleInterval() http.Handler {
+func queryHandleInterval(influxClient dbClient) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -55,7 +56,7 @@ func queryHandleInterval() http.Handler {
 			high = "2147483647"
 		}
 
-		response, err := database.QueryInterval(low, high)
+		response, err := influxClient.QueryInterval(low, high)
 		if err != nil {
 			logger.Error.Println(err)
 			http.Error(
@@ -70,7 +71,7 @@ func queryHandleInterval() http.Handler {
 
 // queryHandleLast is a HTTP handler for querying all / last n entries
 // using database API
-func queryHandleLast() http.Handler {
+func queryHandleLast(influxClient dbClient) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		offset, ok := vars["last"]
@@ -78,7 +79,7 @@ func queryHandleLast() http.Handler {
 			offset = ""
 		}
 
-		response, err := database.QueryAll(offset)
+		response, err := influxClient.QueryAll(offset)
 		if err != nil {
 			logger.Error.Println(err)
 			http.Error(
@@ -93,7 +94,7 @@ func queryHandleLast() http.Handler {
 
 // queryAverage returns the average for a specific interval starting from an
 // offset
-func queryHandleAverage() http.Handler {
+func queryHandleAverage(influxClient dbClient) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		offset, ok := vars["offset"]
@@ -104,7 +105,7 @@ func queryHandleAverage() http.Handler {
 		unit := vars["unit"]
 		col := vars["col"]
 
-		response, err := database.QueryAverage(col, interval + unit, offset)
+		response, err := influxClient.QueryAverage(col, interval + unit, offset)
 		if err != nil {
 			logger.Error.Println(err)
 			http.Error(
@@ -140,12 +141,12 @@ func isStringNum(strToCheck string) bool {
 }
 
 // StartServer starts server
-func StartServer(appPort string, staticPath string) {
+func StartServer(influxClient dbClient, appPort string, staticPath string) {
 	router := mux.NewRouter()
 	router.StrictSlash(false)
 
 	logger.Info.Println("Adding routes to router/subrouter")
-	addAPIRoutes(router)
+	addAPIRoutes(router, defineRoutes(influxClient))
 	logger.Info.Printf("Serving static content of dir: %s", staticPath)
 	router.PathPrefix("/").Handler(staticServe(staticPath))
 
