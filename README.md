@@ -2,7 +2,7 @@
 
 Weather Station in Go.
 
-### Install
+## Install
 
 #### Server
 * Install dependencies with `go get`.
@@ -12,7 +12,7 @@ Weather Station in Go.
 * Run `bower install` to install all used dependencies.
 * Place `/app` in same directory as the executable.
 
-### About
+## About
 
 * Weather station using sensors for temperature, humidity,
  air pressure, air quality, brightness and rain
@@ -20,7 +20,7 @@ Weather Station in Go.
 * Front end making use of modern technologies such as Angular & jQuery
 * influxDB as database for working with time-series data
 
-### Dependencies
+## Dependencies
 
 * Mux
 * Influxdb client
