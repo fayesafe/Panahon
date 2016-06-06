@@ -8,7 +8,6 @@ import (
 	"Panahon/server"
 	"Panahon/station"
 	"github.com/BurntSushi/toml"
-	"github.com/influxdata/influxdb/client/v2"
 )
 
 type Config struct {
@@ -49,14 +48,12 @@ func main() {
 
 	logger.Info.Println("Config file parsed, config set")
 
-	influxClient, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr: "http://" + config.DB.Server + ":" + config.DB.Port,
-	})
-	if err != nil {
-		logger.Error.Fatalln(err)
-	}
-
-	database.Init(influxClient, config.DB.RootDB, config.DB.Series)
+	influxClient := database.Init(
+		config.DB.RootDB,
+		config.DB.Series,
+		config.DB.Server,
+		config.DB.Port,
+	)
 	logger.Info.Printf(
 		"InfluxDB client initialized on %s:%s, DB: %s, Series: %s",
 		config.DB.Server,
@@ -66,5 +63,5 @@ func main() {
 	)
 
 	go station.TestRoutine()
-	server.StartServer(config.AppPort, config.App.Path)
+	server.StartServer(influxClient, config.AppPort, config.App.Path)
 }

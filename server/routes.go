@@ -14,54 +14,69 @@ type Route struct {
 
 type Routes []Route
 
-// routes contains all routes of the API
-var routes = Routes{
-	Route{
-		"RangeHighLow",
-		"GET",
-		"/range/{low:[0-9]+}/{high:[0-9]+}",
-		queryHandleInterval(),
-	},
-	Route{
-		"RangeLowOnly",
-		"GET",
-		"/range/{low:[0-9]+}",
-		queryHandleInterval(),
-	},
-	Route{
-		"Range",
-		"GET",
-		"/range",
-		queryHandleInterval(),
-	},
-	Route{
-		"LastN",
-		"GET",
-		"/last/{last:[0-9]+}",
-		queryHandleLast(),
-	},
-	Route{
-		"Last",
-		"GET",
-		"/last",
-		queryHandleLast(),
-	},
-	Route{
-		"GeneralApiWithKey",
-		"GET",
-		"/{key}",
-		apiHandler(),
-	},
-	Route{
-		"GeneralApi",
-		"GET",
-		"/",
-		apiHandler(),
-	},
+// defineRoutes contains all routes of the API
+func defineRoutes(influxClient dbClient) Routes {
+	var routes = Routes{
+		Route{
+			"Average",
+			"GET",
+			"/av/{col:[a-z]+}/{interval:[0-9]+}/{unit:(ms)|[usmhdw]}/{offset:[0-9]+}",
+			queryHandleAverage(influxClient),
+		},
+		Route{
+			"Average",
+			"GET",
+			"/av/{col:[a-z]+}/{interval:[0-9]+}/{unit:(ms)|[usmhdw]}",
+			queryHandleAverage(influxClient),
+		},
+		Route{
+			"RangeHighLow",
+			"GET",
+			"/range/{low:[0-9]+}/{high:[0-9]+}",
+			queryHandleInterval(influxClient),
+		},
+		Route{
+			"RangeLowOnly",
+			"GET",
+			"/range/{low:[0-9]+}",
+			queryHandleInterval(influxClient),
+		},
+		Route{
+			"Range",
+			"GET",
+			"/range",
+			queryHandleInterval(influxClient),
+		},
+		Route{
+			"LastN",
+			"GET",
+			"/last/{last:[0-9]+}",
+			queryHandleLast(influxClient),
+		},
+		Route{
+			"Last",
+			"GET",
+			"/last",
+			queryHandleLast(influxClient),
+		},
+		Route{
+			"GeneralApiWithKey",
+			"GET",
+			"/{key}",
+			apiHandler(),
+		},
+		Route{
+			"GeneralApi",
+			"GET",
+			"/",
+			apiHandler(),
+		},
+	}
+	return routes
 }
 
 // AddAPIRoutes adds routes and subroutes on router
-func addAPIRoutes(router *mux.Router) {
+func addAPIRoutes(router *mux.Router, routes Routes) {
 	subRouter := router.PathPrefix("/api").Subrouter()
 	for _, i := range routes {
 		subRouter.
