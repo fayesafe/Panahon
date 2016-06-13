@@ -8,7 +8,7 @@ angular
       data: {
         json: [],
         keys: {
-          x: 'time',
+          x: 'ts',
           value: ['temperature']
         },
         names: { temperature: 'Temperatur' },
@@ -19,7 +19,12 @@ angular
             temperature: function (v, id, i, j) { return v + '°C'; }
           }
         },
-        colors: { temperature: 'orange' }
+        colors: { temperature: '#ff851b' },
+        empty: {
+          label: {
+            text: "Loading data..."
+          }
+        }
       },
       axis: {
         x: {
@@ -34,7 +39,7 @@ angular
       data: {
         json: [],
         keys: {
-          x: 'time',
+          x: 'ts',
           value: ['humidity']
         },
         names: { humidity: 'Luftfeuchtigkeit' },
@@ -45,7 +50,12 @@ angular
             humidity: function (v, id, i, j) { return v + '%'; }
           }
         },
-        colors: { humidity: 'green' }
+        colors: { humidity: '#28b62c' },
+        empty: {
+          label: {
+            text: "Loading data..."
+          }
+        }
       },
       axis: {
         x: {
@@ -58,16 +68,16 @@ angular
       data: {
         json: [],
         keys: {
-          x: 'time',
+          x: 'ts',
           value: ['pressure']
         },
-        names: {pressure: 'Luftdruck' },
+        names: { pressure: 'Luftdruck' },
         classes: { pressure: 'pressure' },
         type: 'bar',
         labels: {
           format: function (v, id, i, j) { return v + 'hPa'; }
         },
-        colors: { pressure: 'blue' },
+        colors: { pressure: '#158cba' },
         empty: {
           label: {
             text: "Loading data..."

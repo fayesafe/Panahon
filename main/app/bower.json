@@ -20,6 +20,8 @@
     "angular-route": "^1.5.6",
     "bootswatch-dist": "lumen",
     "c3": "^0.4.11",
-    "jquery": "^2.2.4"
+    "jquery": "^2.2.4",
+    "weather-icons": "^2.0.10",
+    "eonasdan-bootstrap-datetimepicker": "^4.17.37"
   }
 }

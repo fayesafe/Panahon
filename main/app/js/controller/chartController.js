@@ -4,17 +4,14 @@ angular
     ['$interval', '$scope', 'CHART_OPTIONS', 'EVENTS',
     function($interval, $scope, CHART_OPTIONS, EVENTS) {
 
-      $scope.generateChart = function(layout) {
-        $scope.chart = c3.generate(layout);
+      $scope.generateChart = function() {
+        $scope.chart = c3.generate($scope.layout);
       };
 
       $scope.loadData = function(data) {
         $scope.chart.load({
           json: data,
-          keys: {
-            x: 'time',
-            value: [$scope.key]
-          }
+          keys: $scope.layout.data.keys
         });
       };
 
@@ -30,9 +27,7 @@ angular
 
         $scope.chart.flow({
           json: data,
-          keys: {
-            value: ['time', $scope.key]
-          },
+          keys: $scope.layout.data,
           length: flowLength
         });
       };

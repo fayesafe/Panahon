@@ -1,6 +1,6 @@
 angular
   .module('weatherApp')
-  .directive('chart', function() {
+  .directive('chart', ['CHART_OPTIONS', function(CHART_OPTIONS) {
     return {
       scope: {},
       transclude: true,
@@ -18,17 +18,17 @@ angular
         $scope.chartId = attrs.chartId;
         $scope.title   = attrs.title;
         $scope.style   = attrs.style;
-        $scope.key     = attrs.key;
         $scope.flow    = attrs.flow;
         $scope.flowValuesLimit = 1*attrs.flowValuesLimit;
 
-        var layout = JSON.parse(attrs.layout);
-        layout.bindto = '#' + $scope.chartId;
+        // set generic id of chart in C3.js options
+        $scope.layout = angular.copy(CHART_OPTIONS[attrs.layout]);
+        $scope.layout.bindto = '#' + $scope.chartId;
 
-        // set generic id of chart before initializing with C3js
+        // set generic id of chart before initializing with C3.js
         $(element).find('div.chart').attr('id', $scope.chartId);
 
-        $scope.generateChart(layout);
+        $scope.generateChart();
       }
     }
-  });
+  }]);

@@ -5,9 +5,13 @@ angular.
       $locationProvider.hashPrefix('!');
 
       $routeProvider
-        .when('/overview', {
-          templateUrl : 'templates/overview.html',
-          controller: 'OverviewController'
+        .when('/week', {
+          templateUrl : 'templates/week.html',
+          controller: 'WeekController'
+        })
+        .when('/day', {
+          templateUrl : 'templates/day.html',
+          controller: 'DayController'
         })
         .when('/realtime', {
           templateUrl : 'templates/realtime.html',
@@ -17,6 +21,6 @@ angular.
           templateUrl : 'templates/all.html',
           controller: 'AllController'
         })
-        .otherwise('/overview');
+        .otherwise('/week');
     }
   ]);

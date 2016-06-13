@@ -1,0 +1,62 @@
+.wi-day-sunny {
+  color: orange;
+}
+
+.panel h1 {
+  text-align: center;
+}
+
+panel-today {
+  cursor: pointer;
+}
+
+.panel-today .panel-heading {
+  padding: 15px;
+  font-size: 1.2em;
+  font-weight: 700;
+}
+.panel-past-day {
+  margin-top: 15px;
+  transition: margin-top .5s;
+}
+
+.panel-past-day:hover {
+  margin-top: 0px;
+}
+
+.day {
+  transition: all .5s;
+  cursor: pointer;
+}
+
+.day.panel-heading {
+  text-align: center;
+}
+
+.min-temperature {
+  color: lightgrey;
+}
+
+.days-view {
+  margin-bottom: 10px;
+}
+
+#datepicker {
+  margin: 15px 0 20px 10px;
+}
+
+@keyframes fadeIn { from { margin-top: -10px; opacity:0; opacity: 1\9; } to { margin-top: 0; opacity:1; } }
+
+.fade-in {
+  opacity:0;
+  margin-top: -10px;
+  animation:fadeIn ease-in 1;
+  animation-fill-mode:forwards;
+  animation-duration:.6s;
+}
+
+.fade-in-1 { animation-delay: .2s; }
+.fade-in-2 { animation-delay: .4s; }
+.fade-in-3 { animation-delay: .6s; }
+.fade-in-4 { animation-delay: .5s; }
+.fade-in-5 { animation-delay: .7s; }
