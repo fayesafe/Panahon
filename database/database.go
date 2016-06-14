@@ -51,16 +51,37 @@ func (influx dbClient) QueryInterval(low string, high string) (*client.Response,
 func (influx dbClient) QueryAverage(
 	col string,
 	interval string,
-	offset string) (*client.Response, error) {
+	offset string,
+	end string) (*client.Response, error) {
 	query := fmt.Sprintf(
-		"SELECT mean(%s) FROM %s WHERE time > %ss GROUP BY time(%s)",
+		"SELECT mean(%s) FROM %s WHERE time > %ss AND time < %ss GROUP BY time(%s)",
 		col,
 		influx.Series,
 		offset,
+		end,
 		interval)
 
 	q := client.NewQuery(query, influx.Database, "s")
-	logger.Info.Println("Getting average from %s of col %s", offset, col)
+	logger.Info.Printf("Getting average from %s of col %s", offset, col)
+	return influx.Client.Query(q)
+}
+
+func (influx dbClient) QueryMax(
+	col string,
+	interval string,
+	offset string,
+	end string) (*client.Response, error) {
+	query := fmt.Sprintf(
+		"SELECT max(%s) FROM %s WHERE time > %ss AND time < %ss GROUP BY time(%s)",
+		col,
+		influx.Series,
+		offset,
+		end,
+		interval)
+
+	q := client.NewQuery(query, influx.Database, "s")
+	logger.Info.Printf("Getting max value from %s to %s of col %s",
+		offset, end, col)
 	return influx.Client.Query(q)
 }
 

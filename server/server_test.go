@@ -27,7 +27,8 @@ func (influxClient DBClientMockOK) QueryAll(
 func (influxClient DBClientMockOK) QueryAverage(
     col string,
     interval string,
-    offset string) (*client.Response, error) {
+    offset string,
+    end string) (*client.Response, error) {
     return createQueryReturn(), nil
 }
 
@@ -35,6 +36,15 @@ func (influx DBClientMockOK) QueryInterval(
     low string, high string) (*client.Response, error) {
     return createQueryReturn(), nil
 }
+
+func (influx DBClientMockOK) QueryMax(
+    col string,
+    interval string,
+    offset string,
+    end string) (*client.Response, error) {
+    return createQueryReturn(), nil
+}
+
 
 type DBClientMockError struct {
     Server string
@@ -49,12 +59,21 @@ func (influxClient DBClientMockError) QueryAll(
 func (influxClient DBClientMockError) QueryAverage(
     col string,
     interval string,
-    offset string) (*client.Response, error) {
+    offset string,
+    end string) (*client.Response, error) {
     return nil, errors.New("=== Test Error ===")
 }
 
 func (influx DBClientMockError) QueryInterval(
     low string, high string) (*client.Response, error) {
+    return nil, errors.New("=== Test Error ===")
+}
+
+func (influx DBClientMockError) QueryMax(
+    col string,
+    interval string,
+    offset string,
+    end string) (*client.Response, error) {
     return nil, errors.New("=== Test Error ===")
 }
 
@@ -223,8 +242,15 @@ func TestQueryAverageOkError(t *testing.T) {
 type MockInterface interface {
     QueryAll(offset string) (*client.Response, error)
     QueryAverage(
-        col string, interval string, offset string) (*client.Response, error)
+        col string,
+        interval string,
+        offset string,
+        end string) (*client.Response, error)
     QueryInterval(low string, high string) (*client.Response, error)
+    QueryMax(col string,
+        interval string,
+        offset string,
+        end string) (*client.Response, error)
 }
 
 type DBClientMockIntegrationOK struct {
@@ -234,17 +260,22 @@ type DBClientMockIntegrationOK struct {
 
 func (influxClient DBClientMockIntegrationOK) QueryAll(
     offset string) (*client.Response, error) {
-    return createQueryReturnWithParams(offset, "x", "y"), nil
+    return createQueryReturnWithParams(offset, "x", "y", "z"), nil
 }
 
 func (influxClient DBClientMockIntegrationOK) QueryAverage(
-    col string, interval string, offset string) (*client.Response, error) {
-    return createQueryReturnWithParams(col, interval, offset), nil
+    col string, interval string, offset string, end string) (*client.Response, error) {
+    return createQueryReturnWithParams(col, interval, offset, end), nil
 }
 
 func (influx DBClientMockIntegrationOK) QueryInterval(
     low string, high string) (*client.Response, error) {
-    return createQueryReturnWithParams(low, high, "x"), nil
+    return createQueryReturnWithParams(low, high, "x", "y"), nil
+}
+
+func (influx DBClientMockIntegrationOK) QueryMax(
+    col string, interval string, offset string, end string) (*client.Response, error) {
+    return createQueryReturnWithParams(col, interval, offset, end), nil
 }
 
 type DBClientMockIntegrationError struct {
@@ -258,7 +289,7 @@ func (influxClient DBClientMockIntegrationError) QueryAll(
 }
 
 func (influxClient DBClientMockIntegrationError) QueryAverage(
-    col string, interval string, offset string) (*client.Response, error) {
+    col string, interval string, offset string, end string) (*client.Response, error) {
     return nil, errors.New("=== Test Error ===")
 }
 
@@ -266,27 +297,36 @@ func (influx DBClientMockIntegrationError) QueryInterval(
     low string, high string) (*client.Response, error) {
     return nil, errors.New("=== Test Error ===")
 }
+
+func (influx DBClientMockIntegrationError) QueryMax(
+    col string, interval string, offset string, end string) (*client.Response, error) {
+    return nil, errors.New("=== Test Error ===")
+}
+
 var expectedResponseOneParamEmpty string = `{"Series":[{"name":"Test","tags":`+
-`{"":"","test":"test","x":"x","y":"y"},"columns":["test","test"]}],"Messages"`+
-`:null,"error":"test"}`
+`{"":"","test":"test","x":"x","y":"y","z":"z"},"columns":["test","test"]}],"M`+
+`essages":null,"error":"test"}`
 var expectedResponseOneParam string = `{"Series":[{"name":"Test","tags":{"1":`+
-`"1","test":"test","x":"x","y":"y"},"columns":["test","test"]}],"Messages":nu`+
-`ll,"error":"test"}`
+`"1","test":"test","x":"x","y":"y","z":"z"},"columns":["test","test"]}],"Mess`+
+`ages":null,"error":"test"}`
 var expectedResponseTwoParamEmpty string = `{"Series":[{"name":"Test","tags":`+
-`{"0":"0","2147483647":"2147483647","test":"test","x":"x"},"columns":["test",`+
-`"test"]}],"Messages":null,"error":"test"}`
+`{"0":"0","2147483647":"2147483647","test":"test","x":"x","y":"y"},"columns":`+
+`["test","test"]}],"Messages":null,"error":"test"}`
 var expectedResponseTwoParamRangeOne string = `{"Series":[{"name":"Test","tag`+
-`s":{"10":"10","2147483647":"2147483647","test":"test","x":"x"},"columns":["t`+
-`est","test"]}],"Messages":null,"error":"test"}`
+`s":{"10":"10","2147483647":"2147483647","test":"test","x":"x","y":"y"},"colu`+
+`mns":["test","test"]}],"Messages":null,"error":"test"}`
 var expectedResponseTwoParamRangeFull string = `{"Series":[{"name":"Test","ta`+
-`gs":{"10":"10","100":"100","test":"test","x":"x"},"columns":["test","test"]}`+
-`],"Messages":null,"error":"test"}`
+`gs":{"10":"10","100":"100","test":"test","x":"x","y":"y"},"columns":["test",`+
+`"test"]}],"Messages":null,"error":"test"}`
 var expectedResponseAvWoOffset string = `{"Series":[{"name":"Test","tags":{"0`+
-`":"0","10w":"10w","temp":"temp","test":"test"},"columns":["test","test"]}],"`+
-`Messages":null,"error":"test"}`
+`":"0","10w":"10w","2147483647":"2147483647","temp":"temp","test":"test"},"co`+
+`lumns":["test","test"]}],"Messages":null,"error":"test"}`
 var expectedResponseAvWOffset string = `{"Series":[{"name":"Test","tags":{"10`+
-`0":"100","10w":"10w","temp":"temp","test":"test"},"columns":["test","test"]}`+
-`],"Messages":null,"error":"test"}`
+`0":"100","10w":"10w","2147483647":"2147483647","temp":"temp","test":"test"},`+
+`"columns":["test","test"]}],"Messages":null,"error":"test"}`
+var expectedResponseAvFull string = `{"Series":[{"name":"Test","tags":{"100":`+
+`"100","10w":"10w","123":"123","temp":"temp","test":"test"},"columns":["test"`+
+`,"test"]}],"Messages":null,"error":"test"}`
 
 type TestRoute struct {
     Prefix string
@@ -300,12 +340,13 @@ type TestRoute struct {
 type routesToTest []TestRoute
 
 func createQueryReturnWithParams(
-    param1 string, param2 string, param3 string) (*client.Response) {
+    param1 string, param2 string, param3 string, param4 string) (*client.Response) {
     tags := map[string]string{
         "test":"test",
         param1:param1,
         param2:param2,
         param3:param3,
+        param4:param4,
     }
     result := models.Row{
         Name: "Test",
@@ -433,36 +474,100 @@ func TestIntegrateRoutes(t *testing.T) {
             expectedBody : "Internal Server Error\n",
         },
         TestRoute{
-            Prefix : "/av/{col:[a-z]+}/{interval:[0-9]+}/{unit:(ms)|[usmhdw]}",
-            Route : "/av/temp/10/w",
+            Prefix : "/av/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}",
+            Route : "/av/temp/10w",
             Handler : queryHandleAverage,
             Mock : mockInfluxHappy,
             expectedCode : http.StatusOK,
             expectedBody : expectedResponseAvWoOffset,
         },
         TestRoute{
-            Prefix : "/av/{col:[a-z]+}/{interval:[0-9]+}/{unit:(ms)|[usmhdw]}",
-            Route : "/av/temp/10/w",
+            Prefix : "/av/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}",
+            Route : "/av/temp/10w",
             Handler : queryHandleAverage,
             Mock : mockInfluxError,
             expectedCode : http.StatusInternalServerError,
             expectedBody : "Internal Server Error\n",
         },
         TestRoute{
-            Prefix : "/av/{col:[a-z]+}/{interval:[0-9]+}/{unit:(ms)|[usmhdw]}/{offset:[0-9]+}",
-            Route : "/av/temp/10/w/100",
+            Prefix : "/av/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}",
+            Route : "/av/temp/10w/100",
             Handler : queryHandleAverage,
             Mock : mockInfluxHappy,
             expectedCode : http.StatusOK,
             expectedBody : expectedResponseAvWOffset,
         },
         TestRoute{
-            Prefix : "/av/{col:[a-z]+}/{interval:[0-9]+}/{unit:(ms)|[usmhdw]}/{offset:[0-9]+}",
-            Route : "/av/temp/10/w/100",
+            Prefix : "/av/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}",
+            Route : "/av/temp/10w/100",
             Handler : queryHandleAverage,
             Mock : mockInfluxError,
             expectedCode : http.StatusInternalServerError,
             expectedBody : "Internal Server Error\n",
+        },
+        TestRoute{
+            Prefix : "/av/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}/{high:[0-9]+}",
+            Route : "/av/temp/10w/100/123",
+            Handler : queryHandleAverage,
+            Mock : mockInfluxHappy,
+            expectedCode : http.StatusOK,
+            expectedBody : expectedResponseAvFull,
+        },
+        TestRoute{
+            Prefix : "/av/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}/{high:[0-9]+}",
+            Route : "/av/temp/10w/100/123",
+            Handler : queryHandleAverage,
+            Mock : mockInfluxError,
+            expectedCode : http.StatusInternalServerError,
+            expectedBody : "Internal Server Error\n",
+        },
+        TestRoute{
+            Prefix : "/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}",
+            Route : "/max/temp/10w",
+            Handler : queryHandleMax,
+            Mock : mockInfluxHappy,
+            expectedCode: http.StatusOK,
+            expectedBody: expectedResponseAvWoOffset,
+        },
+        TestRoute{
+            Prefix : "/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}",
+            Route : "/max/temp/10w",
+            Handler : queryHandleMax,
+            Mock : mockInfluxError,
+            expectedCode: http.StatusInternalServerError,
+            expectedBody: "Internal Server Error\n",
+        },
+        TestRoute{
+            Prefix : "/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}",
+            Route : "/max/temp/10w/100",
+            Handler : queryHandleMax,
+            Mock : mockInfluxHappy,
+            expectedCode: http.StatusOK,
+            expectedBody: expectedResponseAvWOffset,
+        },
+        TestRoute{
+            Prefix : "/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}",
+            Route : "/max/temp/10w/100",
+            Handler : queryHandleMax,
+            Mock : mockInfluxError,
+            expectedCode: http.StatusInternalServerError,
+            expectedBody: "Internal Server Error\n",
+        },
+        TestRoute{
+            Prefix : "/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}/{high:[0-9]+}",
+            Route : "/max/temp/10w/100/123",
+            Handler : queryHandleMax,
+            Mock : mockInfluxHappy,
+            expectedCode: http.StatusOK,
+            expectedBody: expectedResponseAvFull,
+        },
+        TestRoute{
+            Prefix : "/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}/{high:[0-9]+}",
+            Route : "/max/temp/10w/100/123",
+            Handler : queryHandleMax,
+            Mock : mockInfluxError,
+            expectedCode: http.StatusInternalServerError,
+            expectedBody: "Internal Server Error\n",
         },
     }
     for _, TestRoute := range testingRoutes {
