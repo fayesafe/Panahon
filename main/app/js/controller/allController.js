@@ -1,70 +1,45 @@
 angular
   .module('weatherApp')
   .controller('AllController',
-    ['$scope', 'DataService',
-    function($scope, DataService) {
+    ['$scope', 'DataService', 'DatetimeService', 'EVENTS',
+    function($scope, DataService, DatetimeService, EVENTS) {
 
-      // base data
-      var dataClimate =  [
-          {temp: -1, rain: 100, sun: 2, month: 'Jan', date: '2014-01-01', num: 13},
-          {temp: 2, rain: 80, sun: 3, month: 'Feb', date: '2014-02-01', num: 14},
-          {temp: 7, rain: 90, sun: 5, month: 'Mar', date: '2014-03-01', num: 15},
-          {temp: 11, rain: 60, sun: 7, month: 'Apr', date: '2014-04-01', num: 16},
-          {temp: 15, rain: 50, sun: 9, month: 'May', date: '2014-05-01', num: 17},
-          {temp: 22, rain: 15, sun: 12, month: 'Jun', date: '2014-06-01', num: 18},
-          {temp: 25, rain: 10, sun: 12, month: 'Jul', date: '2014-07-01', num: 19},
-          {temp: 28, rain: 5, sun: 13, month: 'Aug', date: '2014-08-01', num: 20},
-          {temp: 27, rain: 30, sun: 2, month: 'Sep', date: '2014-09-01', num: 21},
-          {temp: 21, rain: 60, sun: 6, month: 'Oct', date: '2014-10-01', num: 22},
-          {temp: 14, rain: 70, sun: 9, month: 'Nov', date: '2014-11-01', num: 23},
-          {temp: 5, rain: 80, sun: 5, month: 'Dec', date: '2014-12-01', num: 24}
-      ];
+      $scope.format = 'DD.MM.YYYY';
 
-      var optionsClimate = {
-          dimensions: {
-              temp: {
-                  axis: 'y',
-                  type: 'spline',
-                  label: true,
-                  color: 'orange',
-                  postfix: '°C',
-                  name: 'temperature'
-              },
-              rain: {
-                  axis: 'y2',
-                  type: 'bar',
-                  label: true,
-                  color: 'lightblue',
-                  postfix: 'mm',
-                  name: 'rain'
-              },
-              sun: {
-                  axis: 'y',
-                  type: 'step',
-                  color: 'red',
-                  label: true,
-                  postfix: 'h',
-                  name: 'sunshine'
-              },
-              month: {
-                  axis: 'x'
-              }
-          }
+      $scope.datepicker = $('#datepicker').datetimepicker({
+        format: $scope.format,
+        defaultDate: Date.now()
+      }).on('dp.change', function(e) {
+        var ts = e.date.valueOf();
+        $scope.getData(ts);
+      }).data("DateTimePicker");
+
+      $scope.$watch('format', function() {
+        $scope.datepicker.format($scope.format);
+
+        if ($scope.format == 'DD.MM.YYYY') {
+          $scope.getData = DataService.getDataOfDay;
+          $scope.formatTimestamp = DatetimeService.formatTime;
+        } else if ($scope.format == 'MM.YYYY') {
+          $scope.getData = DataService.getDataOfMonth;
+          $scope.formatTimestamp = DatetimeService.formatDay;
+        } else {
+          $scope.getData = DataService.getDataOfYear;
+          $scope.formatTimestamp = DatetimeService.formatMonth;
+        }
+
+        $scope.loadData($scope.datepicker.date().valueOf());
+      });
+
+      $scope.loadData = function(ts) {
+        var data = $scope.getData(ts);
+        data.forEach(function(elem, index, array) {
+          elem.ts = $scope.formatTimestamp(elem.ts);
+        });
+        $scope.$broadcast(EVENTS.DATA_UPDATED, data);
       };
 
-      // stateful
-      $scope.statefulOptions = angular.copy(optionsClimate);
-      $scope.statefulOptions.data = dataClimate;
-      $scope.statefulOptions.chart = {
-          subchart: {
-              show: true
-          }
-      };
-      $scope.statefulOptions.state = {
-          range: [3, 9]
-      };
-
-      $scope.$on('angular-chart-rendered', function(event, options, instance) {
-        console.log(instance.data());
-      })
+      setTimeout(function($scope) {
+        $scope.loadData($scope.datepicker.date().valueOf());
+      }, 1000, $scope);
   }]);

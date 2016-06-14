@@ -13,7 +13,7 @@ angular
       $scope.day.ts = ts;
 
       setTimeout(function($scope) {
-        $scope.day = DataService.getDayData(ts);
+        $scope.day = DataService.getDataOfDay(ts);
         $scope.$apply();
 
         $scope.$broadcast(
@@ -21,11 +21,18 @@ angular
           $scope.day.data)
       }, 1000, $scope);
 
-      $scope.datepicker = $('#datepicker').datetimepicker({
+      $('#datepicker').datetimepicker({
         format: 'DD.MM.YYYY',
         defaultDate: new Date(ts)
-      });
-      $scope.datepicker.on('changeDate', function(e) {
-        console.log(e);
+      }).on('dp.change', function(e) {
+        var ts = e.date.valueOf();
+        setTimeout(function($scope) {
+          $scope.day = DataService.getDataOfDay(ts);
+          $scope.$apply();
+
+          $scope.$broadcast(
+            EVENTS.DATA_UPDATED,
+            $scope.day.data)
+        }, 1000, $scope);
       });
 }]);

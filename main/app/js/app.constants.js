@@ -3,6 +3,11 @@ angular
   .constant('EVENTS', {
     'DATA_UPDATED': 'data_updated'
   })
+  .constant('DATETIME', {
+    'MONTHS': [
+      'Jan', 'Febr', 'März', 'Apr', 'Mai', 'Juni', 'Juli', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'
+    ]
+  })
   .constant('CHART_OPTIONS', {
     'TEMPERATURE': {
       data: {
@@ -99,8 +104,56 @@ angular
           }
         }
       }
+    },
+    'ALL': {
+      bindto: '#chart-all',
+      data: {
+        json: [],
+        axis: {
+          ts: 'x',
+          temperature: 'y',
+          pressure: 'y2'
+        },
+        keys: {
+          x: 'ts',
+          value: ['temperature', 'humidity', 'pressure']
+        },
+        axes: {
+          'pressure': 'y2'
+        },
+        names: { temperature: 'Temperatur', humidity: 'Luftfeuchtigkeit', pressure: 'Luftdruck' },
+        classes: {  },
+        types: { temperature: 'spline', humidity: 'line', pressure: 'bar' },
+        labels: {
+          format: {
+            temperature: function (v, id, i, j) { return v + '°C'; },
+            humidity: function (v, id, i, j) { return v + '%'; },
+            //pressure: function (v, id, i, j) { return v + 'hPa'; },
+          }
+        },
+        colors: { temperature: '#ff851b', humidity: '#28b62c', pressure: '#3498db' },
+        empty: { label: { text: "Loading data..." } }
+      },
+      axis: {
+        x: {
+          type: 'category',
+          labels: true
+        },
+        y2: {
+          show: true,
+          tick: { format: function (d) { return d + ' hPa'; } }
+        }
+      },
+      grid: { y: { lines: [{ value: 0 }] } },
+      zoom: {
+          enabled: true
+      },
+      subchart: {
+          show: true
+      }
     }
   })
-  .run(function ($rootScope, CHART_OPTIONS) {
+  .run(function ($rootScope, CHART_OPTIONS, DATETIME) {
     $rootScope.CHART_OPTIONS = CHART_OPTIONS;
+    $rootScope.DATETIME = DATETIME;
   });

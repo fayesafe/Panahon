@@ -1,14 +1,38 @@
 <div class="row">
   <div class="col-lg-12">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        Alle Daten
-      </div>
-      <div class="panel-body">
-        <div id="chart-all">
-          <angular-chart options="statefulOptions" instance="instance"></angular-chart>
-        </div>
+
+    <div class="pull-left">
+      Ansicht: &nbsp;&nbsp;
+      <div class="btn-group" role="group">
+        <a ng-click="format='DD.MM.YYYY'" ng-class="{'active': format=='DD.MM.YYYY'}" class="btn btn-default">Tag</a>
+        <a ng-click="format='MM.YYYY'" ng-class="{'active': format=='MM.YYYY'}" class="btn btn-default">Monat</a>
+        <a ng-click="format='YYYY'" ng-class="{'active': format=='YYYY'}" class="btn btn-default">Jahr</a>
       </div>
     </div>
+
+    <form class="form-inline pull-right">
+      <label for="datepicker">Datum:</label>
+      <div class="form-group">
+        <div class='input-group date' id='datepicker'>
+          <input type='text' class="form-control" />
+          <span class="input-group-addon">
+            <span class="glyphicon glyphicon-calendar"></span>
+          </span>
+        </div>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+
+<div class="row">
+  <div class="col-lg-12">
+    <chart
+      chart-id="chart-all"
+      layout="ALL"
+      title="Alle Daten"
+      style="warning"
+      zoom="0,5" />
   </div>
 </div>

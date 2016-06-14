@@ -30,3 +30,7 @@ text {
 .temperature {
 
 }
+
+#chart-all>svg>g:nth-child(3) .tick {
+  display: none !important;
+}

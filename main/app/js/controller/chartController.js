@@ -9,10 +9,15 @@ angular
       };
 
       $scope.loadData = function(data) {
+        $scope.chart.unload({ids: $scope.layout.data.keys});
         $scope.chart.load({
           json: data,
           keys: $scope.layout.data.keys
         });
+
+        if ($scope.zoom) {
+          $scope.chart.zoom($scope.zoom);
+        }
       };
 
       $scope.flowData = function(data) {
@@ -21,7 +26,7 @@ angular
 
         // already 10 measurements in chart? If so, then flow existing data out
         if (existingData.length > 0 &&
-            existingData[0].values.length > $scope.flowValuesLimit) {
+            existingData[0].values.length > $scope.flow) {
           flowLength = data.length;
         }
 

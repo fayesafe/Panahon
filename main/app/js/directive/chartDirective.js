@@ -8,18 +8,17 @@ angular
       controller: 'ChartController',
       link: function link($scope, element, attrs, controller) {
 
-        if (!attrs.flow) {
-          attrs.flow = false;
+        if (attrs.flow) {
+          $scope.flow = 1*attrs.flow;
         }
-        if (!attrs.flowValuesLimit) {
-          attrs.flowValuesLimit = 10;
+
+        if (attrs.zoom) {
+          $scope.zoom = attrs.zoom.split(',');
         }
 
         $scope.chartId = attrs.chartId;
         $scope.title   = attrs.title;
         $scope.style   = attrs.style;
-        $scope.flow    = attrs.flow;
-        $scope.flowValuesLimit = 1*attrs.flowValuesLimit;
 
         // set generic id of chart in C3.js options
         $scope.layout = angular.copy(CHART_OPTIONS[attrs.layout]);
