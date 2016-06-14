@@ -3,11 +3,15 @@ text {
   font-size: 14px;
 }
 
-#chart-temperature .c3-line-temp {
-  stroke-width: 3px;
+.c3-line-temperature {
+  stroke-width: 3px!important;
   /*stroke-dasharray: 8;
   -webkit-animation: dash 1s linear infinite;
   -webkit-animation-name: temperature;*/
+}
+
+.c3-target-temperature .c3-text {
+  fill: #B65F13!important;
 }
 
 /*@keyframes temperature {
@@ -20,5 +24,13 @@ text {
     opacity: 0.7;
 }
 .grid path {
-      stroke-width: 0;
+    stroke-width: 0;
+}
+
+.temperature {
+
+}
+
+#chart-all>svg>g:nth-child(3) .tick {
+  display: none !important;
 }
