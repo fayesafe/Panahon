@@ -18,15 +18,39 @@ type Routes []Route
 func defineRoutes(influxClient dbClient) Routes {
 	var routes = Routes{
 		Route{
+			"MaxVal",
+			"GET",
+			"/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}/{high:[0-9]+}",
+			queryHandleMax(influxClient),
+		},
+		Route{
+			"MaxVal",
+			"GET",
+			"/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}",
+			queryHandleMax(influxClient),
+		},
+		Route{
+			"MaxVal",
+			"GET",
+			"/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}",
+			queryHandleMax(influxClient),
+		},
+		Route{
 			"Average",
 			"GET",
-			"/av/{col:[a-z]+}/{interval:[0-9]+}/{unit:(ms)|[usmhdw]}/{offset:[0-9]+}",
+			"/av/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}/{high:[0-9]+}",
 			queryHandleAverage(influxClient),
 		},
 		Route{
 			"Average",
 			"GET",
-			"/av/{col:[a-z]+}/{interval:[0-9]+}/{unit:(ms)|[usmhdw]}",
+			"/av/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}",
+			queryHandleAverage(influxClient),
+		},
+		Route{
+			"Average",
+			"GET",
+			"/av/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}",
 			queryHandleAverage(influxClient),
 		},
 		Route{

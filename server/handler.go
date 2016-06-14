@@ -14,7 +14,8 @@ import (
 type dbClient interface {
 	QueryAll(offset string) (*client.Response, error)
 	QueryInterval(low string, high string) (*client.Response, error)
-	QueryAverage(col string, interval string, offset string) (*client.Response, error)
+	QueryAverage(col string, interval string, offset string, end string) (*client.Response, error)
+	QueryMax(col string, interval string, offset string, end string) (*client.Response, error)
 }
 
 // staticServe serving front end application of the weather station
@@ -97,15 +98,47 @@ func queryHandleLast(influxClient dbClient) http.Handler {
 func queryHandleAverage(influxClient dbClient) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		offset, ok := vars["offset"]
-		if !ok || !isStringNum(offset) {
-			offset = "0"
+		low, ok := vars["low"]
+		if !ok || !isStringNum(low) {
+			low = "0"
+		}
+		high, ok := vars["high"]
+		if !ok || !isStringNum(high) {
+			high = "2147483647"
 		}
 		interval := vars["interval"]
-		unit := vars["unit"]
 		col := vars["col"]
 
-		response, err := influxClient.QueryAverage(col, interval + unit, offset)
+		response, err := influxClient.QueryAverage(col, interval, low, high)
+		if err != nil {
+			logger.Error.Println(err)
+			http.Error(
+				w,
+				"Internal Server Error",
+				http.StatusInternalServerError)
+		} else {
+			sendPayload(response, w)
+		}
+	})
+}
+
+func queryHandleMax(influxClient dbClient) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		low, ok := vars["low"]
+		if !ok || !isStringNum(low) {
+			low = "0"
+		}
+
+		high, ok := vars["high"]
+		if !ok || !isStringNum(high) {
+			high = "2147483647"
+		}
+
+		interval := vars["interval"]
+		col := vars["col"]
+
+		response, err := influxClient.QueryMax(col, interval, low, high)
 		if err != nil {
 			logger.Error.Println(err)
 			http.Error(
