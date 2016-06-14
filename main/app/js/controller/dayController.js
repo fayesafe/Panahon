@@ -1,8 +1,8 @@
 angular
   .module('weatherApp')
   .controller('DayController',
-    ['$routeParams', '$rootScope', '$scope', 'DataService', 'EVENTS',
-    function($routeParams, $rootScope, $scope, DataService, EVENTS) {
+    ['$routeParams', '$scope', 'DataService', 'EVENTS',
+    function($routeParams, $scope, DataService, EVENTS) {
 
       var ts = Date.now();
       if ($routeParams.ts) {
@@ -16,7 +16,7 @@ angular
         $scope.day = DataService.getDayData(ts);
         $scope.$apply();
 
-        $rootScope.$broadcast(
+        $scope.$broadcast(
           EVENTS.DATA_UPDATED,
           $scope.day.data)
       }, 1000, $scope);

@@ -21,14 +21,16 @@
 
 <body ng-app="weatherApp" ng-cloak>
 
-  <div id="wrapper">
-    <div class="overlay"></div>
+  <div id="wrapper" ng-controller="SidebarController" ng-class="{'toggled': !isClosed}">
+    <div class="overlay" ng-click="toggleNavbar()"></div>
 
     <div ng-include="'templates/sidebar.html'"></div>
 
     <!-- Page Content -->
     <div id="page-content-wrapper">
-      <button type="button" class="hamburger is-closed" data-toggle="offcanvas">
+      <button type="button" class="hamburger"
+        ng-class="{'is-closed': isClosed, 'is-open': !isClosed}"
+        ng-click="toggleNavbar()">
         <span class="hamb-top"></span>
         <span class="hamb-middle"></span>
         <span class="hamb-bottom"></span>
@@ -55,14 +57,13 @@
   <script src="./vendor/bootswatch-dist/js/bootstrap.min.js"></script>
   <script src="./vendor/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
 
-  <script src="./js/sidebar.js"></script>
-
   <script src="./js/app.module.js"></script>
   <script src="./js/app.config.js"></script>
   <script src="./js/app.constants.js"></script>
 
   <script src="./js/service/dataService.js"></script>
 
+  <script src="./js/controller/sidebarController.js"></script>
   <script src="./js/controller/weekController.js"></script>
   <script src="./js/controller/dayController.js"></script>
   <script src="./js/controller/realtimeController.js"></script>
