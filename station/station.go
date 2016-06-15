@@ -23,24 +23,40 @@ func TestRoutine() {
     }
 }
 
-func read_ldr() {
-    if err := embd.InitSPI(); err != nil {
+func read_ldr(port int) {
+    if err := embd.InitGPIO(); err != nil {
         panic(err)
     }
-    defer embd.CloseSPI()
+    defer embd.CloseGPIO()
 
-    spiBus := embd.NewSPIBus(embd.SPIMode0, channel, speed, bpw, delay)
-    defer spiBus.Close()
+    ldr,err := embd.NewDigitalPin(port)
+    if err != nil {
+        panic(err)
+    }
+    defer ldr.Close()
 
-    adc := mcp3008.New(mcp3008.SingleMode, spiBus)
-
-    for i := 0; i < 20; i++ {
-        time.Sleep(1 * time.Second)
-        val, err := adc.AnalogValueAt(0)
-        if err != nil {
+    for i := 0; i < 200; i++ {
+        if err := ldr.SetDirection(embd.Out); err != nil {
             panic(err)
         }
-        fmt.Printf("analog value is: %v\n", val)
+        if err := ldr.Write(embd.Low); err != nil {
+            panic(err)
+        }
+
+        time.Sleep(100 * time.Millisecond)
+
+        if err := ldr.SetDirection(embd.In); err != nil {
+            panic(err)
+        }
+
+        count := 0
+        j,_ := ldr.Read()
+        for j == embd.Low {
+            count += 1
+            j,_ = ldr.Read()
+        }
+
+        fmt.Printf("LDR value is: %v\n", count)
     }
 }
 
