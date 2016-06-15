@@ -12,16 +12,7 @@ angular
       $scope.day = {};
       $scope.day.ts = ts;
 
-      setTimeout(function($scope) {
-        $scope.day = DataService.getDataOfDay(ts);
-        $scope.$apply();
-
-        $scope.$broadcast(
-          EVENTS.DATA_UPDATED,
-          $scope.day.data)
-      }, 1000, $scope);
-
-      $('#datepicker').datetimepicker({
+      $scope.datepicker = $('#datepicker').datetimepicker({
         format: 'DD.MM.YYYY',
         defaultDate: new Date(ts)
       }).on('dp.change', function(e) {
@@ -32,7 +23,19 @@ angular
 
           $scope.$broadcast(
             EVENTS.DATA_UPDATED,
-            $scope.day.data)
+            $scope.data)
         }, 1000, $scope);
-      });
+      }).data("DateTimePicker");
+
+      setTimeout(function() {
+        DataService.getDataOfDay(ts).then(function(rows) {
+          $scope.$broadcast(EVENTS.DATA_UPDATED, rows)
+        }, function(response) {
+          console.log('Error:',response);
+        });
+
+
+      },600);
+
+
 }]);

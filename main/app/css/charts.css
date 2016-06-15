@@ -11,7 +11,7 @@ text {
 }
 
 .c3-target-temperature .c3-text {
-  fill: #B65F13!important;
+  /*fill: #B65F13!important;*/
 }
 
 /*@keyframes temperature {

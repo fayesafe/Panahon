@@ -22,11 +22,17 @@
       <div class="panel" ng-class="{'panel-warning panel-today': $first, 'panel-info panel-past-day': !$first}">
         <div class="panel-heading">{{day.ts | date:'dd.MM.yyyy'}}</div>
         <div class="panel-body">
-          <h1>
+          <h2>
             <i class="wi wi-day-sunny"></i>&nbsp;&nbsp;{{day.temperatureMax}} °C
             <span class="min-temperature">{{day.temperatureMin}} °C</span>
-          </h1>
+          </h2>
           <br/>
+          <p>
+            <strong>Regen</strong>
+            <span ng-show="default">&nbsp;&nbsp;</span>
+            <span ng-show="!default"></br></span>
+            {{day.rain}}%
+          </p>
           <p>
             <strong>Luftdruck</strong>
             <span ng-show="default">&nbsp;&nbsp;</span>
@@ -44,12 +50,6 @@
             <span ng-show="default">&nbsp;&nbsp;</span>
             <span ng-show="!default"></br></span>
             {{day.sunHours}} Std.
-          </p>
-          <p>
-            <strong>Regen</strong>
-            <span ng-show="default">&nbsp;&nbsp;</span>
-            <span ng-show="!default"></br></span>
-            {{day.rain}}%
           </p>
           <p>
             <strong>Luftfeuchtigkeit</strong>

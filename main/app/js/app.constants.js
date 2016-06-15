@@ -11,11 +11,9 @@ angular
   .constant('CHART_OPTIONS', {
     'TEMPERATURE': {
       data: {
-        json: [],
-        keys: {
-          x: 'ts',
-          value: ['temperature']
-        },
+        x: 'time',
+        rows: [],
+        hide: ['humidity', 'air', 'sun', 'rain', 'pressure'],
         names: { temperature: 'Temperatur' },
         classes: { temperature: 'temperature' },
         types: { temperature: 'spline' },
@@ -31,10 +29,13 @@ angular
           }
         }
       },
+      legend: {
+        hide: ['humidity', 'air', 'sun', 'rain', 'pressure']
+      },
       axis: {
         x: {
           type: 'timeseries',
-          tick: { format: '%H:%M:%S' },
+          tick: { format: '%H:%M' },
           labels: true
         }
       },
@@ -42,11 +43,9 @@ angular
     },
     'HUMIDITY': {
       data: {
-        json: [],
-        keys: {
-          x: 'ts',
-          value: ['humidity']
-        },
+        x: 'time',
+        rows: [],
+        hide: ['temperature', 'air', 'sun', 'rain', 'pressure'],
         names: { humidity: 'Luftfeuchtigkeit' },
         classes: { humidity: 'humidity' },
         types: { humidity: 'line' },
@@ -62,26 +61,24 @@ angular
           }
         }
       },
+      legend: {
+        hide: ['temperature', 'air', 'sun', 'rain', 'pressure']
+      },
       axis: {
         x: {
           type: 'timeseries',
-          tick: { format: '%H:%M:%S' }
+          tick: { format: '%H:%M' }
         }
       }
     },
     'PRESSURE': {
       data: {
-        json: [],
-        keys: {
-          x: 'ts',
-          value: ['pressure']
-        },
+        x: 'time',
+        rows: [],
+        hide: ['humidity', 'air', 'sun', 'rain', 'temperature'],
         names: { pressure: 'Luftdruck' },
         classes: { pressure: 'pressure' },
         type: 'bar',
-        labels: {
-          format: function (v, id, i, j) { return v + 'hPa'; }
-        },
         colors: { pressure: '#158cba' },
         empty: {
           label: {
@@ -89,24 +86,26 @@ angular
           }
         }
       },
+      legend: {
+        hide: ['humidity', 'air', 'sun', 'rain', 'temperature']
+      },
       axis: {
         x: {
           type: 'timeseries',
-          tick: { format: '%H:%M:%S' },
+          tick: { format: '%H:%M' },
         },
         y: {
           tick: { format: function (d) {
             return d + 'hPa';
-          } },
-          label: {
-            text: 'Your Y Axis',
-            position: 'outer-middle',
-          }
+          } }
         }
       }
     },
     'ALL': {
       bindto: '#chart-all',
+      size: {
+        height: 500
+      },
       data: {
         json: [],
         axis: {

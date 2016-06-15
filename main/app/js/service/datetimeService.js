@@ -17,6 +17,19 @@ angular
       },
       formatMonth: function(ts) {
         return DATETIME.MONTHS[new Date(ts).getMonth()];
+      },
+      getStartTimestampOfDay: function(ts) {
+        var a = new Date(ts);
+        a.setHours(0);
+        a.setMinutes(0);
+        a.setSeconds(0);
+        a.setMilliseconds(0);
+        return a.getTime();
+      },
+      getNextDayTimestamp: function(ts) {
+        var a = new Date(ts);
+        a.setDate(a.getDate() + 1)
+        return a.getTime();
       }
     };
   }]);
