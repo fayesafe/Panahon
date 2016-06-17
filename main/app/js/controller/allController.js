@@ -11,7 +11,8 @@ angular
         defaultDate: Date.now()
       }).on('dp.change', function(e) {
         var ts = e.date.valueOf();
-        $scope.getData(ts);
+        console.log('change',new Date(ts).toString());
+        $scope.loadData(ts);
       }).data("DateTimePicker");
 
       $scope.$watch('format', function() {
@@ -20,26 +21,32 @@ angular
         if ($scope.format == 'DD.MM.YYYY') {
           $scope.getData = DataService.getDataOfDay;
           $scope.formatTimestamp = DatetimeService.formatTime;
+          $scope.datepicker.date()
         } else if ($scope.format == 'MM.YYYY') {
           $scope.getData = DataService.getDataOfMonth;
           $scope.formatTimestamp = DatetimeService.formatDay;
         } else {
           $scope.getData = DataService.getDataOfYear;
-          $scope.formatTimestamp = DatetimeService.formatMonth;
+          $scope.formatTimestamp = function(ts, index) { return index+'. Woche'};
         }
 
         $scope.loadData($scope.datepicker.date().valueOf());
       });
 
       $scope.loadData = function(ts) {
-        var data = $scope.getData(ts);
-        data.forEach(function(elem, index, array) {
-          elem.ts = $scope.formatTimestamp(elem.ts);
+        $scope.getData(ts).then(function(rows) {
+          rows.forEach(function(elem, index, array) {
+            if (index != 0) {
+              elem[0] = $scope.formatTimestamp(elem[0], index);
+            }
+          });
+          $scope.$broadcast(EVENTS.DATA_UPDATED, rows);
+        }, function(response) {
+          console.log('Error:',response);
         });
-        $scope.$broadcast(EVENTS.DATA_UPDATED, data);
       };
 
-      setTimeout(function($scope) {
+      /*setTimeout(function($scope) {
         $scope.loadData($scope.datepicker.date().valueOf());
-      }, 1000, $scope);
+      }, 1000, $scope);*/
   }]);

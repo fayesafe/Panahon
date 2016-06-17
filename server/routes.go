@@ -1,8 +1,9 @@
 package server
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type Route struct {
@@ -20,37 +21,37 @@ func defineRoutes(influxClient dbClient) Routes {
 		Route{
 			"MaxVal",
 			"GET",
-			"/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}/{high:[0-9]+}",
+			"/max/{col:[a-z]+}/{interval:(-|[0-9]+((ms)|[usmhdw]))}/{low:[0-9]+}/{high:[0-9]+}",
 			queryHandleMax(influxClient),
 		},
 		Route{
 			"MaxVal",
 			"GET",
-			"/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}",
+			"/max/{col:[a-z]+}/{interval:(-|[0-9]+((ms)|[usmhdw]))}/{low:[0-9]+}",
 			queryHandleMax(influxClient),
 		},
 		Route{
 			"MaxVal",
 			"GET",
-			"/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}",
+			"/max/{col:[a-z]+}/{interval:(-|[0-9]+((ms)|[usmhdw]))}",
 			queryHandleMax(influxClient),
 		},
 		Route{
 			"Average",
 			"GET",
-			"/av/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}/{high:[0-9]+}",
+			"/av/{col:[a-z\\*]+}/{interval:(-|[0-9]+((ms)|[usmhdw]))}/{low:[0-9]+}/{high:[0-9]+}",
 			queryHandleAverage(influxClient),
 		},
 		Route{
 			"Average",
 			"GET",
-			"/av/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}",
+			"/av/{col:[a-z*]+}/{interval:(-|[0-9]+((ms)|[usmhdw]))}/{low:[0-9]+}",
 			queryHandleAverage(influxClient),
 		},
 		Route{
 			"Average",
 			"GET",
-			"/av/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}",
+			"/av/{col:[a-z*]+}/{interval:(-|[0-9]+((ms)|[usmhdw]))}",
 			queryHandleAverage(influxClient),
 		},
 		Route{

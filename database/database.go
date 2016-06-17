@@ -54,6 +54,7 @@ func (influx dbClient) QueryAverage(
 	interval string,
 	offset string,
 	end string) (*client.Response, error) {
+
 	query := fmt.Sprintf(
 		"SELECT mean(%s) FROM %s WHERE time >= %sms AND time < %sms GROUP BY time(%s)",
 		col,
@@ -72,6 +73,7 @@ func (influx dbClient) QueryMax(
 	interval string,
 	offset string,
 	end string) (*client.Response, error) {
+
 	query := fmt.Sprintf(
 		"SELECT max(%s) FROM %s WHERE time >= %sms AND time < %sms GROUP BY time(%s)",
 		col,
