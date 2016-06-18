@@ -58,11 +58,12 @@ angular
 
         $.when(
           $.get('/api/max/temperature/1d/'+tsStart+'/'+tsEnd),
+          $.get('/api/min/temperature/1d/'+tsStart+'/'+tsEnd),
           $.get('/api/av/pressure/1d/'+tsStart+'/'+tsEnd),
           $.get('/api/av/humidity/1d/'+tsStart+'/'+tsEnd),
           $.get('/api/av/rain/1d/'+tsStart+'/'+tsEnd),
           $.get('/api/av/sun/1h/'+tsStart+'/'+tsEnd)
-        ).done(function(maxTemp, avPressure, avHumidity, avRain, avSun) {
+        ).done(function(maxTemp, minTemp, avPressure, avHumidity, avRain, avSun) {
           var sunHours = 0;
           avSun[0].Series[0].values.forEach(function(elem) {
             if (elem[1] < 300) sunHours += 1;
@@ -71,6 +72,7 @@ angular
           deferred.resolve({
             ts: ts,
             temperatureMax: maxTemp[0].Series[0].values[0][1],
+            temperatureMin: minTemp[0].Series[0].values[0][1],
             pressure: avPressure[0].Series[0].values[0][1],
             humidity: avHumidity[0].Series[0].values[0][1],
             rain: avRain[0].Series[0].values[0][1] * 100,

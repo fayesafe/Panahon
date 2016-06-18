@@ -3,11 +3,6 @@ angular
   .constant('EVENTS', {
     'DATA_UPDATED': 'data_updated'
   })
-  .constant('DATETIME', {
-    'MONTHS': [
-      'Jan', 'Febr', 'März', 'Apr', 'Mai', 'Juni', 'Juli', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'
-    ]
-  })
   .constant('CHART_OPTIONS', {
     'TEMPERATURE': {
       data: {
@@ -210,7 +205,6 @@ angular
       }
     }
   })
-  .run(function ($rootScope, CHART_OPTIONS, DATETIME) {
+  .run(function ($rootScope, CHART_OPTIONS) {
     $rootScope.CHART_OPTIONS = CHART_OPTIONS;
-    $rootScope.DATETIME = DATETIME;
   });
