@@ -11,9 +11,10 @@ import (
 )
 
 type Config struct {
-	AppPort string      `toml:"app_port"`
-	DB      Database    `toml:"database"`
-	App     Application `toml:"app"`
+	AppPort        string      `toml:"app_port"`
+	DB             Database    `toml:"database"`
+	App            Application `toml:"app"`
+	WeatherStation Station     `toml:"station"`
 }
 
 type Database struct {
@@ -25,6 +26,12 @@ type Database struct {
 
 type Application struct {
 	Path string
+}
+
+type Station struct {
+	Rain   int
+	DHT22  int
+	LDR    int
 }
 
 func parseConfig(configPath string, config *Config) error {
@@ -62,6 +69,6 @@ func main() {
 		config.DB.Series,
 	)
 
-	go station.TestRoutine()
+	go station.StartReadRoutine(influxClient, config.WeatherStation.DHT22, config.WeatherStation.LDR, config.WeatherStation.Rain)
 	server.StartServer(influxClient, config.AppPort, config.App.Path)
 }

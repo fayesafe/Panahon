@@ -8,3 +8,8 @@ series = "meas"
 
 [app]
 path = "./app/"
+
+[station]
+rain = 10
+dht22 = 12
+ldr = 13

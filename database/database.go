@@ -8,14 +8,14 @@ import (
 	"github.com/influxdata/influxdb/client/v2"
 )
 
-type dbClient struct {
-	Client   client.Client
+type DBClient struct {
+	Client client.Client
 	Database string
 	Series   string
 }
 
 // QueryAll queries all entries of Influx DB, or last n entries
-func (influx dbClient) QueryAll(offset string) (*client.Response, error) {
+func (influx DBClient) QueryAll(offset string) (*client.Response, error) {
 	var q client.Query
 
 	if offset != "" {
@@ -35,7 +35,7 @@ func (influx dbClient) QueryAll(offset string) (*client.Response, error) {
 }
 
 // QueryInterval queries Influx DB for an interval of time
-func (influx dbClient) QueryInterval(low string, high string) (*client.Response, error) {
+func (influx DBClient) QueryInterval(low string, high string) (*client.Response, error) {
 	query := fmt.Sprintf(
 		"SELECT * FROM %s WHERE time < %sms AND time >= %sms",
 		influx.Series,
@@ -49,7 +49,7 @@ func (influx dbClient) QueryInterval(low string, high string) (*client.Response,
 }
 
 // QueryAverage queries the average for given cols on a given interval
-func (influx dbClient) QueryAverage(
+func (influx DBClient) QueryAverage(
 	col string,
 	interval string,
 	offset string,
@@ -68,7 +68,7 @@ func (influx dbClient) QueryAverage(
 	return influx.Client.Query(q)
 }
 
-func (influx dbClient) QueryMax(
+func (influx DBClient) QueryMax(
 	col string,
 	interval string,
 	offset string,
@@ -89,8 +89,8 @@ func (influx dbClient) QueryMax(
 }
 
 // Init of database client
-func Init(database string, series string, server string, port string) *dbClient {
-	databaseConn := new(dbClient)
+func Init(database string, series string, server string, port string) *DBClient {
+	databaseConn := new(DBClient)
 	influxClient, err := client.NewHTTPClient(client.HTTPConfig{
 		Addr: "http://" + server + ":" + port,
 	})
