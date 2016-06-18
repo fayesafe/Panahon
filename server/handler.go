@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"Panahon/logger"
+
 	"github.com/gorilla/mux"
 	"github.com/influxdata/influxdb/client/v2"
 )
@@ -54,7 +55,7 @@ func queryHandleInterval(influxClient dbClient) http.Handler {
 
 		high, ok := vars["high"]
 		if !ok || !isStringNum(high) {
-			high = "2147483647"
+			high = "2147483647000"
 		}
 
 		response, err := influxClient.QueryInterval(low, high)
@@ -104,7 +105,7 @@ func queryHandleAverage(influxClient dbClient) http.Handler {
 		}
 		high, ok := vars["high"]
 		if !ok || !isStringNum(high) {
-			high = "2147483647"
+			high = "2147483647000"
 		}
 		interval := vars["interval"]
 		col := vars["col"]

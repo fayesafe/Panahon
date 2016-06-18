@@ -1,0 +1,59 @@
+
+<div class="row">
+  <div class="col-lg-12">
+    <h1 class="">Letzte Woche</h1>
+    <div class="pull-right bottom-margin">
+      Ansicht: &nbsp;&nbsp;
+      <div class="btn-group" role="group">
+        <a ng-click="default=true" ng-class="{'active': default}" class="btn btn-default">4 Tage</a>
+        <a ng-click="default=false" ng-class="{'active': !default}" class="btn btn-default">6 Tage</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div ng-repeat="day in days track by $index">
+
+    <div class="day fade-in fade-in-{{$index}}"
+      ng-class="{'col-lg-3': default, 'col-lg-2': !default}"
+      ng-if="(default && $index < 4) || !default"
+      ng-click="open(day)">
+      <div class="panel" ng-class="{'panel-warning panel-today': $first, 'panel-info panel-past-day': !$first}">
+        <div class="panel-heading">{{day.ts | date:'dd.MM.yyyy'}}</div>
+        <div class="panel-body">
+          <h2>
+            <i class="wi wi-day-sunny"></i>&nbsp;&nbsp;{{day.temperatureMax | number:0}} °C
+            <span class="min-temperature">{{day.temperatureMin | number:0}} °C</span>
+          </h2>
+          <br/>
+          <p>
+            <strong>Regen</strong>
+            <span ng-show="default">&nbsp;&nbsp;</span>
+            <span ng-show="!default"></br></span>
+            {{day.rain | number:1}}%
+          </p>
+          <p>
+            <strong>Luftdruck</strong>
+            <span ng-show="default">&nbsp;&nbsp;</span>
+            <span ng-show="!default"></br></span>
+            {{day.pressure | number:0}} hPa
+          </p>
+          <p>
+            <strong>Sonnenstunden</strong>
+            <span ng-show="default">&nbsp;&nbsp;</span>
+            <span ng-show="!default"></br></span>
+            {{day.sunHours | number:0}} Std.
+          </p>
+          <p>
+            <strong>Luftfeuchtigkeit</strong>
+            <span ng-show="default">&nbsp;&nbsp;</span>
+            <span ng-show="!default"></br></span>
+            {{day.humidity | number:1}}%
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
