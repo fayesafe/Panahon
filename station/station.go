@@ -43,27 +43,29 @@ type dbClient interface {
 
 func StartReadRoutine(influx *database.DBClient, DHTPin int, LDRPin int, RainPin int) {
 	for {
-		logger.Info.Println("Measurements started...")
+		logger.Info.Println("Sensor read routine started...")
 		go ReadSensors(influx, DHTPin, LDRPin, RainPin)
 		logger.Info.Printf("Going to sleep for %d minutes", 10)
-		time.Sleep(10 * time.Minute)
+		time.Sleep(10 * time.Second)
 	}
 }
 
 func ReadSensors(influx *database.DBClient, DHTPin int, LDRPin int, RainPin int) {
 	sensorResults := make(chan interface{}, 4)
-	fields := map[string]interface{}{}
+	fields := make(map[string]interface{})
 	tags := map[string]string{}
 
+	logger.Info.Println("Starting measurements...")
 	go readDHT22(sensorResults, DHTPin)
-	go readBMP180(sensorResults, 1)
+    go readBMP180(sensorResults, 1)
 	go readRain(sensorResults, RainPin)
 	go readLDR(sensorResults, LDRPin)
 
 	// Create a point and add to batch
-	for result := range sensorResults {
+    for i := 0; i < 3; i++ {
+        result := <-sensorResults
 		switch result.(type) {
-		case *dht22Result:
+		case dht22Result:
 			tmp, _ := result.(dht22Result)
 			if val, ok := fields["temperature"]; ok {
 				fields["temperature"] = (tmp.Temperature + val.(float32)) / 2
@@ -71,7 +73,7 @@ func ReadSensors(influx *database.DBClient, DHTPin int, LDRPin int, RainPin int)
 				fields["temperature"] = tmp.Temperature
 			}
 			fields["humidity"] = tmp.Humidity
-		case *bmp180Result:
+		case bmp180Result:
 			tmp, _ := result.(bmp180Result)
 			if val, ok := fields["temperature"]; ok {
 				fields["temperature"] = (float32(tmp.Temperature) + val.(float32)) / 2
@@ -79,14 +81,16 @@ func ReadSensors(influx *database.DBClient, DHTPin int, LDRPin int, RainPin int)
 				fields["temperature"] = float32(tmp.Temperature)
 			}
 			fields["pressure"] = tmp.Pressure
-		case *rainResult:
+		case rainResult:
 			tmp, _ := result.(rainResult)
 			fields["rain"] = tmp.Rain
-		case *ldrResult:
+		case ldrResult:
 			tmp, _ := result.(ldrResult)
 			fields["sun"] = tmp.Sun
 		}
 	}
+
+	logger.Info.Println("Measurements finished...")
 
 	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
 		Database:  influx.Database,
@@ -99,6 +103,8 @@ func ReadSensors(influx *database.DBClient, DHTPin int, LDRPin int, RainPin int)
 
 	// write point to db
 	bp.AddPoint(pt)
+    influx.Client.Write(bp)
+	logger.Info.Println("Measurements written to db...")
 }
 
 func readDHT22(sensorResults chan interface{}, port int) {
@@ -115,13 +121,13 @@ func readLDR(sensorResults chan interface{}, port int) {
 	if err := embd.InitGPIO(); err != nil {
 		logger.Error.Panicln(err)
 	}
-	defer embd.CloseGPIO()
+	//defer embd.CloseGPIO()
 
 	ldr, err := embd.NewDigitalPin(port)
 	if err != nil {
 		logger.Error.Panicln(err)
 	}
-	defer ldr.Close()
+	//defer ldr.Close()
 
 	if err := ldr.SetDirection(embd.Out); err != nil {
 		logger.Error.Panicln(err)
@@ -150,19 +156,21 @@ func readLDR(sensorResults chan interface{}, port int) {
 	}
 	logger.Info.Printf("Sun Value=%d", count)
 	sensorResults <- ldrResult{count}
+    embd.CloseGPIO()
+    ldr.Close()
 }
 
 func readRain(sensorResults chan interface{}, port int) {
 	if err := embd.InitGPIO(); err != nil {
 		logger.Error.Panicln(err)
 	}
-	defer embd.CloseGPIO()
+	//defer embd.CloseGPIO()
 
 	pin, err := embd.NewDigitalPin(port)
 	if err != nil {
 		logger.Error.Panicln(err)
 	}
-	defer pin.Close()
+	//defer pin.Close()
 
 	fluidSensor := watersensor.New(pin)
 
@@ -177,18 +185,20 @@ func readRain(sensorResults chan interface{}, port int) {
 	} else {
 		sensorResults <- rainResult{1}
 	}
+    embd.CloseGPIO()
+    pin.Close()
 }
 
 func readBMP180(sensorResults chan interface{}, port byte) {
 	if err := embd.InitI2C(); err != nil {
 		logger.Error.Panicln(err)
 	}
-	defer embd.CloseI2C()
+	//defer embd.CloseI2C()
 
 	bus := embd.NewI2CBus(port)
 
 	baro := bmp180.New(bus)
-	defer baro.Close()
+	//defer baro.Close()
 
 	temp, err := baro.Temperature()
 	if err != nil {
@@ -203,4 +213,6 @@ func readBMP180(sensorResults chan interface{}, port byte) {
 
 	logger.Info.Printf("Pressure=%v hPa\n", pressure)
 	sensorResults <- bmp180Result{temp, pressure}
+    embd.CloseI2C()
+    baro.Close()
 }
