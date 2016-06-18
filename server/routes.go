@@ -19,21 +19,39 @@ type Routes []Route
 func defineRoutes(influxClient dbClient) Routes {
 	var routes = Routes{
 		Route{
-			"MaxVal",
+			"MaxValBothVars",
 			"GET",
 			"/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}/{high:[0-9]+}",
 			queryHandleMax(influxClient),
 		},
 		Route{
-			"MaxVal",
+			"MaxValOnlyLow",
 			"GET",
 			"/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}",
 			queryHandleMax(influxClient),
 		},
 		Route{
-			"MaxVal",
+			"MaxValAll",
 			"GET",
 			"/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}",
+			queryHandleMax(influxClient),
+		},
+		Route{
+			"MinValBothVars",
+			"GET",
+			"/min/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}/{high:[0-9]+}",
+			queryHandleMax(influxClient),
+		},
+		Route{
+			"MinValOnlyLow",
+			"GET",
+			"/min/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}",
+			queryHandleMax(influxClient),
+		},
+		Route{
+			"MinValAll",
+			"GET",
+			"/min/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}",
 			queryHandleMax(influxClient),
 		},
 		Route{
