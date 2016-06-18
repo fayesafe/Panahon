@@ -88,6 +88,25 @@ func (influx dbClient) QueryMax(
 	return influx.Client.Query(q)
 }
 
+func (influx dbClient) QueryMin(
+	col string,
+	interval string,
+	offset string,
+	end string) (*client.Response, error) {
+	query := fmt.Sprintf(
+		"SELECT min(%s) FROM %s WHERE time >= %sms AND time < %sms GROUP BY time(%s)",
+		col,
+		influx.Series,
+		offset,
+		end,
+		interval)
+
+	q := client.NewQuery(query, influx.Database, "ms")
+	logger.Info.Printf("Getting min value from %s to %s of col %s",
+		offset, end, col)
+	return influx.Client.Query(q)
+}
+
 // Init of database client
 func Init(database string, series string, server string, port string) *dbClient {
 	databaseConn := new(dbClient)

@@ -45,6 +45,13 @@ func (influx DBClientMockOK) QueryMax(
     return createQueryReturn(), nil
 }
 
+func (influx DBClientMockOK) QueryMin(
+    col string,
+    interval string,
+    offset string,
+    end string) (*client.Response, error) {
+    return createQueryReturn(), nil
+}
 
 type DBClientMockError struct {
     Server string
@@ -70,6 +77,14 @@ func (influx DBClientMockError) QueryInterval(
 }
 
 func (influx DBClientMockError) QueryMax(
+    col string,
+    interval string,
+    offset string,
+    end string) (*client.Response, error) {
+    return nil, errors.New("=== Test Error ===")
+}
+
+func (influx DBClientMockError) QueryMin(
     col string,
     interval string,
     offset string,
@@ -251,6 +266,10 @@ type MockInterface interface {
         interval string,
         offset string,
         end string) (*client.Response, error)
+    QueryMin(col string,
+        interval string,
+        offset string,
+        end string) (*client.Response, error)
 }
 
 type DBClientMockIntegrationOK struct {
@@ -274,6 +293,11 @@ func (influx DBClientMockIntegrationOK) QueryInterval(
 }
 
 func (influx DBClientMockIntegrationOK) QueryMax(
+    col string, interval string, offset string, end string) (*client.Response, error) {
+    return createQueryReturnWithParams(col, interval, offset, end), nil
+}
+
+func (influx DBClientMockIntegrationOK) QueryMin(
     col string, interval string, offset string, end string) (*client.Response, error) {
     return createQueryReturnWithParams(col, interval, offset, end), nil
 }
@@ -303,6 +327,11 @@ func (influx DBClientMockIntegrationError) QueryMax(
     return nil, errors.New("=== Test Error ===")
 }
 
+func (influx DBClientMockIntegrationError) QueryMin(
+    col string, interval string, offset string, end string) (*client.Response, error) {
+    return nil, errors.New("=== Test Error ===")
+}
+
 var expectedResponseOneParamEmpty string = `{"Series":[{"name":"Test","tags":`+
 `{"":"","test":"test","x":"x","y":"y","z":"z"},"columns":["test","test"]}],"M`+
 `essages":null,"error":"test"}`
@@ -310,19 +339,19 @@ var expectedResponseOneParam string = `{"Series":[{"name":"Test","tags":{"1":`+
 `"1","test":"test","x":"x","y":"y","z":"z"},"columns":["test","test"]}],"Mess`+
 `ages":null,"error":"test"}`
 var expectedResponseTwoParamEmpty string = `{"Series":[{"name":"Test","tags":`+
-`{"0":"0","2147483647":"2147483647","test":"test","x":"x","y":"y"},"columns":`+
+`{"0":"0","2147483647000":"2147483647000","test":"test","x":"x","y":"y"},"columns":`+
 `["test","test"]}],"Messages":null,"error":"test"}`
 var expectedResponseTwoParamRangeOne string = `{"Series":[{"name":"Test","tag`+
-`s":{"10":"10","2147483647":"2147483647","test":"test","x":"x","y":"y"},"colu`+
+`s":{"10":"10","2147483647000":"2147483647000","test":"test","x":"x","y":"y"},"colu`+
 `mns":["test","test"]}],"Messages":null,"error":"test"}`
 var expectedResponseTwoParamRangeFull string = `{"Series":[{"name":"Test","ta`+
 `gs":{"10":"10","100":"100","test":"test","x":"x","y":"y"},"columns":["test",`+
 `"test"]}],"Messages":null,"error":"test"}`
 var expectedResponseAvWoOffset string = `{"Series":[{"name":"Test","tags":{"0`+
-`":"0","10w":"10w","2147483647":"2147483647","temp":"temp","test":"test"},"co`+
+`":"0","10w":"10w","2147483647000":"2147483647000","temp":"temp","test":"test"},"co`+
 `lumns":["test","test"]}],"Messages":null,"error":"test"}`
 var expectedResponseAvWOffset string = `{"Series":[{"name":"Test","tags":{"10`+
-`0":"100","10w":"10w","2147483647":"2147483647","temp":"temp","test":"test"},`+
+`0":"100","10w":"10w","2147483647000":"2147483647000","temp":"temp","test":"test"},`+
 `"columns":["test","test"]}],"Messages":null,"error":"test"}`
 var expectedResponseAvFull string = `{"Series":[{"name":"Test","tags":{"100":`+
 `"100","10w":"10w","123":"123","temp":"temp","test":"test"},"columns":["test"`+
@@ -565,6 +594,54 @@ func TestIntegrateRoutes(t *testing.T) {
             Prefix : "/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}/{high:[0-9]+}",
             Route : "/max/temp/10w/100/123",
             Handler : queryHandleMax,
+            Mock : mockInfluxError,
+            expectedCode: http.StatusInternalServerError,
+            expectedBody: "Internal Server Error\n",
+        },
+        TestRoute{
+            Prefix : "/min/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}",
+            Route : "/min/temp/10w",
+            Handler : queryHandleMin,
+            Mock : mockInfluxHappy,
+            expectedCode: http.StatusOK,
+            expectedBody: expectedResponseAvWoOffset,
+        },
+        TestRoute{
+            Prefix : "/min/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}",
+            Route : "/min/temp/10w",
+            Handler : queryHandleMin,
+            Mock : mockInfluxError,
+            expectedCode: http.StatusInternalServerError,
+            expectedBody: "Internal Server Error\n",
+        },
+        TestRoute{
+            Prefix : "/min/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}",
+            Route : "/min/temp/10w/100",
+            Handler : queryHandleMin,
+            Mock : mockInfluxHappy,
+            expectedCode: http.StatusOK,
+            expectedBody: expectedResponseAvWOffset,
+        },
+        TestRoute{
+            Prefix : "/min/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}",
+            Route : "/min/temp/10w/100",
+            Handler : queryHandleMin,
+            Mock : mockInfluxError,
+            expectedCode: http.StatusInternalServerError,
+            expectedBody: "Internal Server Error\n",
+        },
+        TestRoute{
+            Prefix : "/min/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}/{high:[0-9]+}",
+            Route : "/min/temp/10w/100/123",
+            Handler : queryHandleMin,
+            Mock : mockInfluxHappy,
+            expectedCode: http.StatusOK,
+            expectedBody: expectedResponseAvFull,
+        },
+        TestRoute{
+            Prefix : "/min/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}/{high:[0-9]+}",
+            Route : "/min/temp/10w/100/123",
+            Handler : queryHandleMin,
             Mock : mockInfluxError,
             expectedCode: http.StatusInternalServerError,
             expectedBody: "Internal Server Error\n",
