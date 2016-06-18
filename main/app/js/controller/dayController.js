@@ -9,30 +9,29 @@ angular
         ts = 1*$routeParams.ts;
       }
 
-      $scope.day = {};
-      $scope.day.ts = ts;
+      $scope.loadDay = function(ts) {
+        DataService.getDataOfDay(ts).then(function(rows) {
+          setTimeout(function() {
+            $scope.$broadcast(EVENTS.DATA_UPDATED, rows);
+          }, 100);
+        }, function(response) {
+          console.log('Error:',response);
+        });
 
-      setTimeout(function($scope) {
-        $scope.day = DataService.getDataOfDay(ts);
-        $scope.$apply();
+        DataService.getAggregatedDataOfDay(ts).then(function(day) {
+          $scope.day = day;
+        }, function(response) {
+          console.log('Error:',response);
+        });
+      };
 
-        $scope.$broadcast(
-          EVENTS.DATA_UPDATED,
-          $scope.day.data)
-      }, 1000, $scope);
-
-      $('#datepicker').datetimepicker({
+      $scope.datepicker = $('#datepicker').datetimepicker({
         format: 'DD.MM.YYYY',
         defaultDate: new Date(ts)
       }).on('dp.change', function(e) {
         var ts = e.date.valueOf();
-        setTimeout(function($scope) {
-          $scope.day = DataService.getDataOfDay(ts);
-          $scope.$apply();
+        $scope.loadDay(ts);
+      }).data("DateTimePicker");
 
-          $scope.$broadcast(
-            EVENTS.DATA_UPDATED,
-            $scope.day.data)
-        }, 1000, $scope);
-      });
+      $scope.loadDay(ts);
 }]);

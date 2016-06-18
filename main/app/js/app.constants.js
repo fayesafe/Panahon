@@ -3,19 +3,12 @@ angular
   .constant('EVENTS', {
     'DATA_UPDATED': 'data_updated'
   })
-  .constant('DATETIME', {
-    'MONTHS': [
-      'Jan', 'Febr', 'März', 'Apr', 'Mai', 'Juni', 'Juli', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'
-    ]
-  })
   .constant('CHART_OPTIONS', {
     'TEMPERATURE': {
       data: {
-        json: [],
-        keys: {
-          x: 'ts',
-          value: ['temperature']
-        },
+        x: 'time',
+        rows: [],
+        hide: ['humidity', 'sun', 'rain', 'pressure'],
         names: { temperature: 'Temperatur' },
         classes: { temperature: 'temperature' },
         types: { temperature: 'spline' },
@@ -31,10 +24,13 @@ angular
           }
         }
       },
+      legend: {
+        hide: ['humidity', 'sun', 'rain', 'pressure']
+      },
       axis: {
         x: {
           type: 'timeseries',
-          tick: { format: '%H:%M:%S' },
+          tick: { format: '%H:%M' },
           labels: true
         }
       },
@@ -42,11 +38,9 @@ angular
     },
     'HUMIDITY': {
       data: {
-        json: [],
-        keys: {
-          x: 'ts',
-          value: ['humidity']
-        },
+        x: 'time',
+        rows: [],
+        hide: ['temperature', 'sun', 'rain', 'pressure'],
         names: { humidity: 'Luftfeuchtigkeit' },
         classes: { humidity: 'humidity' },
         types: { humidity: 'line' },
@@ -62,26 +56,24 @@ angular
           }
         }
       },
+      legend: {
+        hide: ['temperature', 'sun', 'rain', 'pressure']
+      },
       axis: {
         x: {
           type: 'timeseries',
-          tick: { format: '%H:%M:%S' }
+          tick: { format: '%H:%M' }
         }
       }
     },
     'PRESSURE': {
       data: {
-        json: [],
-        keys: {
-          x: 'ts',
-          value: ['pressure']
-        },
+        x: 'time',
+        rows: [],
+        hide: ['humidity', 'sun', 'rain', 'temperature'],
         names: { pressure: 'Luftdruck' },
         classes: { pressure: 'pressure' },
         type: 'bar',
-        labels: {
-          format: function (v, id, i, j) { return v + 'hPa'; }
-        },
         colors: { pressure: '#158cba' },
         empty: {
           label: {
@@ -89,41 +81,101 @@ angular
           }
         }
       },
+      legend: {
+        hide: ['humidity', 'sun', 'rain', 'temperature']
+      },
       axis: {
         x: {
           type: 'timeseries',
-          tick: { format: '%H:%M:%S' },
+          tick: { format: '%H:%M' },
         },
         y: {
           tick: { format: function (d) {
             return d + 'hPa';
-          } },
+          } }
+        }
+      }
+    },
+    'RAIN': {
+      data: {
+        x: 'time',
+        rows: [],
+        hide: ['humidity', 'sun', 'temperature', 'pressure'],
+        names: { rain: 'Regen' },
+        classes: { rain: 'rain' },
+        types: { rain: 'area-step' },
+        colors: { rain: '#158cba' },
+        empty: {
           label: {
-            text: 'Your Y Axis',
-            position: 'outer-middle',
+            text: "Loading data..."
           }
+        }
+      },
+      legend: {
+        hide: ['time', 'humidity', 'sun', 'temperature', 'pressure']
+      },
+      axis: {
+        x: {
+          type: 'timeseries',
+          tick: { format: '%H:%M' },
+        },
+        y: {
+          tick: { format: function (d) {
+            return d + '%';
+          } }
+        }
+      }
+    },
+    'SUN': {
+      data: {
+        x: 'time',
+        rows: [],
+        hide: ['humidity', 'rain', 'temperature', 'pressure'],
+        names: { sun: 'Sonne' },
+        classes: { sun: 'rain' },
+        types: { sun: 'spline' },
+        colors: { sun: '#ff4136' },
+        empty: {
+          label: {
+            text: "Loading data..."
+          }
+        }
+      },
+      legend: {
+        hide: ['time', 'humidity', 'rain', 'temperature', 'pressure']
+      },
+      axis: {
+        x: {
+          type: 'timeseries',
+          tick: { format: '%H:%M' },
+        },
+        y: {
+          inverted: true,
+          label: {
+            text: 'Helligkeit',
+            position: 'outer-middle'
+          },
+          tick: { format: function (d) { return ''; } }
         }
       }
     },
     'ALL': {
       bindto: '#chart-all',
+      size: {
+        height: 500
+      },
       data: {
-        json: [],
-        axis: {
+        x: 'time',
+        rows: [],
+        axes: {
           ts: 'x',
           temperature: 'y',
-          pressure: 'y2'
+          pressure: 'y2',
+          sun: 'y2'
         },
-        keys: {
-          x: 'ts',
-          value: ['temperature', 'humidity', 'pressure']
-        },
-        axes: {
-          'pressure': 'y2'
-        },
-        names: { temperature: 'Temperatur', humidity: 'Luftfeuchtigkeit', pressure: 'Luftdruck' },
+        names: { temperature: 'Temperatur', humidity: 'Luftfeuchtigkeit', pressure: 'Luftdruck', rain: 'Regen', sun: 'Sonne' },
         classes: {  },
-        types: { temperature: 'spline', humidity: 'line', pressure: 'bar' },
+        types: { temperature: 'spline', humidity: 'line', pressure: 'bar', rain: 'area-step', sun: 'spline' },
         labels: {
           format: {
             temperature: function (v, id, i, j) { return v + '°C'; },
@@ -153,7 +205,6 @@ angular
       }
     }
   })
-  .run(function ($rootScope, CHART_OPTIONS, DATETIME) {
+  .run(function ($rootScope, CHART_OPTIONS) {
     $rootScope.CHART_OPTIONS = CHART_OPTIONS;
-    $rootScope.DATETIME = DATETIME;
   });

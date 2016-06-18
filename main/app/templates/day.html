@@ -17,24 +17,23 @@
 <div class="row">
   <div class="col-lg-4 day">
     <div class="panel panel-info">
-      <div class="panel-heading">{{day.ts | date:'dd.MM.yyyy'}}</div>
+      <div class="panel-heading"><strong>{{day.ts | date:'dd.MM.yyyy'}}</strong></div>
       <div class="panel-body">
         <h1>
-          <i class="wi wi-day-sunny"></i>&nbsp;&nbsp;{{day.temperatureMax}} °C
-          <span class="min-temperature">{{day.temperatureMin}} °C</span>
+          <i class="wi wi-day-sunny"></i>&nbsp;&nbsp;{{day.temperatureMax | number:0}} °C
+          <span class="min-temperature">{{day.temperatureMin | number:0}} °C</span>
         </h1>
         <br/>
-        <p><strong>Luftdruck</strong>&nbsp;&nbsp; {{day.pressure}} hPa</p>
-        <p><strong>Luftqualität</strong>&nbsp;&nbsp; Sehr gut</p>
-        <p><strong>Sonnenstunden</strong>&nbsp;&nbsp; {{day.sunHours}} Std.</p>
-        <p><strong>Regen</strong>&nbsp;&nbsp; {{day.rain}}%</p>
-        <p><strong>Luftfeuchtigkeit</strong>&nbsp;&nbsp; {{day.humidity}}%</p>
+        <p><strong>Regen</strong>&nbsp;&nbsp; {{day.rain | number:1}}%</p>
+        <p><strong>Luftdruck</strong>&nbsp;&nbsp; {{day.pressure | number:0}} hPa</p>
+        <p><strong>Sonnenstunden</strong>&nbsp;&nbsp; {{day.sunHours | number:0}} Std.</p>
+        <p><strong>Luftfeuchtigkeit</strong>&nbsp;&nbsp; {{day.humidity | number:1}}%</p>
       </div>
     </div>
   </div>
 
   <div class="col-lg-8">
-    <div class="fade-in one">
+    <div class="fade-in">
       <chart
         chart-id="chart-temperature"
         layout="TEMPERATURE"
@@ -46,7 +45,7 @@
 
 <div class="row">
   <div class="col-lg-6">
-    <div class="fade-in one">
+    <div class="fade-in">
     <chart
       chart-id="chart-humidity"
       layout="HUMIDITY"
@@ -55,12 +54,33 @@
     </div>
   </div>
   <div class="col-lg-6">
-    <div class="fade-in one">
+    <div class="fade-in">
     <chart
       chart-id="chart-pressure"
       layout="PRESSURE"
       title="Luftdruck"
       style="primary" />
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-6">
+    <div class="fade-in">
+    <chart
+      chart-id="chart-rain"
+      layout="RAIN"
+      title="Regen"
+      style="primary" />
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="fade-in">
+    <chart
+      chart-id="chart-sun"
+      layout="SUN"
+      title="Sonne"
+      style="danger" />
     </div>
   </div>
 </div>
