@@ -10,6 +10,6 @@ series = "meas"
 path = "./app/"
 
 [station]
-rain = 10
-dht22 = 12
-ldr = 13
+rain = 17
+dht22 = 4
+ldr = 27

@@ -16,10 +16,22 @@ import (
 	"Panahon/logger"
 )
 
-type PinLayout struct {
-	DHTPin  int
-	LDRPin  int
-	RainPin int
+type dht22Result struct {
+	Temperature float32
+	Humidity    float32
+}
+
+type bmp180Result struct {
+	Temperature float64
+	Pressure    int
+}
+
+type rainResult struct {
+	Rain int
+}
+
+type ldrResult struct {
+	Sun int
 }
 
 type dbClient interface {
@@ -27,13 +39,6 @@ type dbClient interface {
 	QueryInterval(low string, high string) (*client.Response, error)
 	QueryAverage(col string, interval string, offset string, end string) (*client.Response, error)
 	QueryMax(col string, interval string, offset string, end string) (*client.Response, error)
-}
-
-func TestRoutine() {
-	for {
-		logger.Info.Println("-- CONCURRENCY TEST ALERT --")
-		time.Sleep(5000 * time.Millisecond)
-	}
 }
 
 func StartReadRoutine(influx *database.DBClient, DHTPin int, LDRPin int, RainPin int) {
@@ -46,19 +51,41 @@ func StartReadRoutine(influx *database.DBClient, DHTPin int, LDRPin int, RainPin
 }
 
 func ReadSensors(influx *database.DBClient, DHTPin int, LDRPin int, RainPin int) {
-	temp, humidity := readDHT22(DHTPin)
-	temp2, pressure := readBMP180(1)
-	rain := readRain(RainPin)
-	sun := readLDR(LDRPin)
+	sensorResults := make(chan interface{}, 4)
+	fields := map[string]interface{}{}
+	tags := map[string]string{}
+
+	go readDHT22(sensorResults, DHTPin)
+	go readBMP180(sensorResults, 1)
+	go readRain(sensorResults, RainPin)
+	go readLDR(sensorResults, LDRPin)
 
 	// Create a point and add to batch
-	tags := map[string]string{}
-	fields := map[string]interface{}{
-		"temperature": (temp + float32(temp2)) / 2,
-		"pressure":    pressure,
-		"Humidity":    humidity,
-		"Rain":        rain,
-		"Sun":         sun,
+	for result := range sensorResults {
+		switch result.(type) {
+		case *dht22Result:
+			tmp, _ := result.(dht22Result)
+			if val, ok := fields["temperature"]; ok {
+				fields["temperature"] = (tmp.Temperature + val.(float32)) / 2
+			} else {
+				fields["temperature"] = tmp.Temperature
+			}
+			fields["humidity"] = tmp.Humidity
+		case *bmp180Result:
+			tmp, _ := result.(bmp180Result)
+			if val, ok := fields["temperature"]; ok {
+				fields["temperature"] = (float32(tmp.Temperature) + val.(float32)) / 2
+			} else {
+				fields["temperature"] = float32(tmp.Temperature)
+			}
+			fields["pressure"] = tmp.Pressure
+		case *rainResult:
+			tmp, _ := result.(rainResult)
+			fields["rain"] = tmp.Rain
+		case *ldrResult:
+			tmp, _ := result.(ldrResult)
+			fields["sun"] = tmp.Sun
+		}
 	}
 
 	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
@@ -74,7 +101,17 @@ func ReadSensors(influx *database.DBClient, DHTPin int, LDRPin int, RainPin int)
 	bp.AddPoint(pt)
 }
 
-func readLDR(port int) int {
+func readDHT22(sensorResults chan interface{}, port int) {
+	temp, hum, retried, err := dht.ReadDHTxxWithRetry(dht.DHT22, port, true, 10)
+	if err != nil {
+		log.Fatal(err)
+	}
+	logger.Info.Printf("Temperature= %v°C, Humidity= %v%% (retried %d times), (DHT22)\n", temp, hum, retried)
+
+	sensorResults <- dht22Result{temp, hum}
+}
+
+func readLDR(sensorResults chan interface{}, port int) {
 	if err := embd.InitGPIO(); err != nil {
 		logger.Error.Panicln(err)
 	}
@@ -112,19 +149,10 @@ func readLDR(port int) int {
 		}
 	}
 	logger.Info.Printf("Sun Value=%d", count)
-	return count
+	sensorResults <- ldrResult{count}
 }
 
-func readDHT22(port int) (float32, float32) {
-	temp, hum, retried, err := dht.ReadDHTxxWithRetry(dht.DHT22, port, true, 10)
-	if err != nil {
-		log.Fatal(err)
-	}
-	logger.Info.Printf("Temperature= %v°C, Humidity= %v%% (retried %d times), (DHT22)\n", temp, hum, retried)
-	return temp, hum
-}
-
-func readRain(port int) bool {
+func readRain(sensorResults chan interface{}, port int) {
 	if err := embd.InitGPIO(); err != nil {
 		logger.Error.Panicln(err)
 	}
@@ -144,10 +172,14 @@ func readRain(port int) bool {
 	}
 
 	logger.Info.Printf("Rain=%t\n", !dry)
-	return !dry
+	if dry {
+		sensorResults <- rainResult{0}
+	} else {
+		sensorResults <- rainResult{1}
+	}
 }
 
-func readBMP180(port byte) (float64, int) {
+func readBMP180(sensorResults chan interface{}, port byte) {
 	if err := embd.InitI2C(); err != nil {
 		logger.Error.Panicln(err)
 	}
@@ -170,5 +202,5 @@ func readBMP180(port byte) (float64, int) {
 	}
 
 	logger.Info.Printf("Pressure=%v hPa\n", pressure)
-	return temp, pressure
+	sensorResults <- bmp180Result{temp, pressure}
 }
