@@ -19,6 +19,7 @@ import (
 type Sensors struct {
 	dhtPin     int
 	ldr        embd.DigitalPin
+	rainPin    embd.DigitalPin
 	rainSensor *watersensor.WaterSensor
 	bmp        *bmp180.BMP180
 }
@@ -27,50 +28,50 @@ var instance *Sensors
 var once sync.Once
 var mutexRead sync.Mutex
 
-func GetInstance() *Sensors {
-	once.Do(func() {
-		instance = &Sensors{}
-	})
-	return instance
-}
-
-func (sensors Sensors) InitSensors(dhtPin int, ldrPin int, rainPin int) {
+func InitSensors(dhtPin int, ldrPin int, rainPin int) *Sensors {
+    sensors := new(Sensors)
+    var err error
 	// init GPIOs
 	if err := embd.InitGPIO(); err != nil {
 		logger.Error.Panicln(err)
 	}
-	defer embd.CloseGPIO()
 	// init I2C
 	if err := embd.InitI2C(); err != nil {
 		logger.Error.Panicln(err)
 	}
-	defer embd.CloseI2C()
 	// init rainSensor
-	pin, err := embd.NewDigitalPin(rainPin)
+	sensors.rainPin, err = embd.NewDigitalPin(rainPin)
 	if err != nil {
 		logger.Error.Panicln(err)
 	}
-	defer pin.Close()
-	sensors.rainSensor = watersensor.New(pin)
+	sensors.rainSensor = watersensor.New(sensors.rainPin)
 	// init LDR
 	sensors.ldr, err = embd.NewDigitalPin(ldrPin)
 	if err != nil {
 		logger.Error.Panicln(err)
 	}
-	defer sensors.ldr.Close()
 	// init bmp180
 	sensors.bmp = bmp180.New(embd.NewI2CBus(1))
-	defer sensors.bmp.Close()
 	// DHT22
 	sensors.dhtPin = dhtPin
 	logger.Info.Println("Sensors initialized")
+
+    return sensors
 }
 
+func (sensors Sensors) Close() {
+	embd.CloseGPIO()
+	embd.CloseI2C()
+	sensors.rainPin.Close()
+	sensors.ldr.Close()
+	sensors.bmp.Close()
+	logger.Info.Println("Sensors closed")
+}
 func (sensors Sensors) RunReadRoutine(influx database.DBClient, interval time.Duration) {
 	for {
 		logger.Info.Println("Measurements started...")
 		go sensors.Read(influx)
-		logger.Info.Printf("Going to sleep for %d seconds", 10)
+		logger.Info.Printf("Going to sleep for %d minutes", interval)
 		time.Sleep(interval * time.Minute)
 	}
 }
@@ -81,7 +82,11 @@ func (sensors Sensors) Read(influx database.DBClient) {
 	tags := map[string]string{}
 
 	if wet, err := readRainSensor(sensors.rainSensor); err == nil {
-		fields["rain"] = wet
+        if wet {
+            fields["rain"] = 1
+        } else {
+            fields["rain"] = 0
+        }
 	}
 	if temp, hum, err := readDHT22(sensors.dhtPin); err == nil {
 		fields["temperature"] = temp
@@ -118,15 +123,15 @@ func (sensors Sensors) Read(influx database.DBClient) {
 }
 
 func readRainSensor(rainSensor *watersensor.WaterSensor) (bool, error) {
-	wet, err := rainSensor.IsWet()
+	dry, err := rainSensor.IsWet()
 
 	if err != nil {
 		logger.Error.Println(err)
 	} else {
-		logger.Info.Printf("Rain=%t (Rain Sensor)\n", wet)
+		logger.Info.Printf("Rain=%t (Rain Sensor)\n", !dry)
 	}
 
-	return wet, err
+	return !dry, err
 }
 
 func readDHT22(port int) (float32, float32, error) {

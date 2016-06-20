@@ -1,7 +1,8 @@
 package main
 
 import (
-	"os"
+    "os"
+	"os/signal"
 	"time"
 
 	"Panahon/database"
@@ -72,12 +73,29 @@ func main() {
 		config.DB.Series,
 	)
 
-	sensors := station.GetInstance()
-	sensors.InitSensors(
+    sensors := station.InitSensors(
 		config.WeatherStation.DHT22,
 		config.WeatherStation.LDR,
 		config.WeatherStation.Rain)
 
+    handleInterrupt(sensors)
+
+	go sensors.RunReadRoutine(*influxClient, config.WeatherStation.Interval)
 	server.StartServer(*influxClient, *sensors, config.AppPort, config.App.Path)
-	sensors.RunReadRoutine(*influxClient, config.WeatherStation.Interval)
+
+}
+
+func handleInterrupt(sensors *station.Sensors) {
+    c := make(chan os.Signal, 1)
+    signal.Notify(c, os.Interrupt)
+
+    go func() {
+        for sig := range c {
+            logger.Info.Printf("Handling signal: %v\n", sig)
+            sensors.Close()
+            close(c)
+            logger.Info.Println("Exiting program")
+            os.Exit(0)
+        }
+    }()
 }
