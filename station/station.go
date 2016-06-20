@@ -54,7 +54,7 @@ func StartReadRoutine(influx *database.DBClient, dhtPin int, ldrPin int, rainPin
 		logger.Info.Println("Measurements started...")
 		go ReadSensors(influx, dhtPin, ldr, rainSensor, bmp)
 		logger.Info.Printf("Going to sleep for %d minutes", 10)
-		time.Sleep(10 * time.Minute)
+		time.Sleep(10 * time.Second)
 	}
 }
 
@@ -81,6 +81,8 @@ func ReadSensors(influx *database.DBClient, dhtPin int, ldr embd.DigitalPin, rai
 		fields["sun"] = sun
 	}
 
+	logger.Info.Println("Measurements finished...")
+
 	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
 		Database:  influx.Database,
 		Precision: "ms",
@@ -92,6 +94,8 @@ func ReadSensors(influx *database.DBClient, dhtPin int, ldr embd.DigitalPin, rai
 
 	// write point to db
 	bp.AddPoint(pt)
+	influx.Client.Write(bp)
+	logger.Info.Println("Measurements written to db...")
 }
 
 func readRainSensor(rainSensor *watersensor.WaterSensor) (bool, error) {
@@ -156,6 +160,7 @@ func readLDR(ldr embd.DigitalPin) (int, error) {
 
 func readBMP180(bmp *bmp180.BMP180) (float32, int, error) {
 	temp, err := bmp.Temperature()
+
 	if err != nil {
 		logger.Error.Println(err)
 		return 0, 0, err
