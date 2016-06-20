@@ -6,19 +6,13 @@ import (
 	"net/http"
 	"strconv"
 
+	"Panahon/database"
 	"Panahon/logger"
+	"Panahon/station"
 
 	"github.com/gorilla/mux"
 	"github.com/influxdata/influxdb/client/v2"
 )
-
-type dbClient interface {
-	QueryAll(offset string) (*client.Response, error)
-	QueryInterval(low string, high string) (*client.Response, error)
-	QueryAverage(col string, interval string, offset string, end string) (*client.Response, error)
-	QueryMax(col string, interval string, offset string, end string) (*client.Response, error)
-	QueryMin(col string, interval string, offset string, end string) (*client.Response, error)
-}
 
 // staticServe serving front end application of the weather station
 // Takes path as argument, pointing to root dir of the app
@@ -45,7 +39,7 @@ func apiHandler() http.Handler {
 
 // queryHandleInterval is a HTTP handler for querying an interval of time
 // using database API
-func queryHandleInterval(influxClient dbClient) http.Handler {
+func queryHandleInterval(influxClient database.DBClient) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -74,7 +68,7 @@ func queryHandleInterval(influxClient dbClient) http.Handler {
 
 // queryHandleLast is a HTTP handler for querying all / last n entries
 // using database API
-func queryHandleLast(influxClient dbClient) http.Handler {
+func queryHandleLast(influxClient database.DBClient) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		offset, ok := vars["last"]
@@ -97,7 +91,7 @@ func queryHandleLast(influxClient dbClient) http.Handler {
 
 // queryAverage returns the average for a specific interval starting from an
 // offset
-func queryHandleAverage(influxClient dbClient) http.Handler {
+func queryHandleAverage(influxClient database.DBClient) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		low, ok := vars["low"]
@@ -125,7 +119,7 @@ func queryHandleAverage(influxClient dbClient) http.Handler {
 }
 
 // queryHandleMax returns the max value for a given column
-func queryHandleMax(influxClient dbClient) http.Handler {
+func queryHandleMax(influxClient database.DBClient) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		low, ok := vars["low"]
@@ -155,32 +149,12 @@ func queryHandleMax(influxClient dbClient) http.Handler {
 }
 
 // queryHandleMin returns the min value for a given column
-func queryHandleMin(influxClient dbClient) http.Handler {
+func handleMeasurement(influxClient database.DBClient, sensors station.Sensors) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		low, ok := vars["low"]
-		if !ok || !isStringNum(low) {
-			low = "0"
-		}
+		sensors.Read(influxClient)
 
-		high, ok := vars["high"]
-		if !ok || !isStringNum(high) {
-			high = "2147483647000"
-		}
-
-		interval := vars["interval"]
-		col := vars["col"]
-
-		response, err := influxClient.QueryMin(col, interval, low, high)
-		if err != nil {
-			logger.Error.Println(err)
-			http.Error(
-				w,
-				"Internal Server Error",
-				http.StatusInternalServerError)
-		} else {
-			sendPayload(response, w)
-		}
+		w.Header().Set("Content-Type", "text/json")
+		w.Write([]byte("done"))
 	})
 }
 
@@ -192,7 +166,7 @@ func sendPayload(queryResponse *client.Response, w http.ResponseWriter) {
 		if err != nil {
 			logger.Error.Println(err)
 		}
-		logger.Info.Printf("Sending Payload: %s", string(payload))
+		//logger.Info.Printf("Sending Payload: %s", string(payload))
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(payload)
 	}
@@ -207,12 +181,12 @@ func isStringNum(strToCheck string) bool {
 }
 
 // StartServer starts server
-func StartServer(influxClient dbClient, appPort string, staticPath string) {
+func StartServer(influxClient database.DBClient, sensors station.Sensors, appPort string, staticPath string) {
 	router := mux.NewRouter()
 	router.StrictSlash(false)
 
 	logger.Info.Println("Adding routes to router/subrouter")
-	addAPIRoutes(router, defineRoutes(influxClient))
+	addAPIRoutes(router, defineRoutes(influxClient, sensors))
 	logger.Info.Printf("Serving static content of dir: %s", staticPath)
 	router.PathPrefix("/").Handler(staticServe(staticPath))
 

@@ -1,19 +1,23 @@
 package main
 
 import (
-	"os"
+    "os"
+	"os/signal"
+	"time"
 
 	"Panahon/database"
 	"Panahon/logger"
 	"Panahon/server"
 	"Panahon/station"
+
 	"github.com/BurntSushi/toml"
 )
 
 type Config struct {
-	AppPort string      `toml:"app_port"`
-	DB      Database    `toml:"database"`
-	App     Application `toml:"app"`
+	AppPort        string      `toml:"app_port"`
+	DB             Database    `toml:"database"`
+	App            Application `toml:"app"`
+	WeatherStation Station     `toml:"station"`
 }
 
 type Database struct {
@@ -25,6 +29,13 @@ type Database struct {
 
 type Application struct {
 	Path string
+}
+
+type Station struct {
+	Rain     int
+	DHT22    int
+	LDR      int
+	Interval time.Duration
 }
 
 func parseConfig(configPath string, config *Config) error {
@@ -62,6 +73,29 @@ func main() {
 		config.DB.Series,
 	)
 
-	go station.TestRoutine()
-	server.StartServer(influxClient, config.AppPort, config.App.Path)
+    sensors := station.InitSensors(
+		config.WeatherStation.DHT22,
+		config.WeatherStation.LDR,
+		config.WeatherStation.Rain)
+
+    handleInterrupt(sensors)
+
+	go sensors.RunReadRoutine(*influxClient, config.WeatherStation.Interval)
+	server.StartServer(*influxClient, *sensors, config.AppPort, config.App.Path)
+
+}
+
+func handleInterrupt(sensors *station.Sensors) {
+    c := make(chan os.Signal, 1)
+    signal.Notify(c, os.Interrupt)
+
+    go func() {
+        for sig := range c {
+            logger.Info.Printf("Handling signal: %v\n", sig)
+            sensors.Close()
+            close(c)
+            logger.Info.Println("Exiting program")
+            os.Exit(0)
+        }
+    }()
 }

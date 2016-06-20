@@ -1,6 +1,8 @@
 package server
 
 import (
+	"Panahon/database"
+	"Panahon/station"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -16,7 +18,7 @@ type Route struct {
 type Routes []Route
 
 // defineRoutes contains all routes of the API
-func defineRoutes(influxClient dbClient) Routes {
+func defineRoutes(influxClient database.DBClient, sensors station.Sensors) Routes {
 	var routes = Routes{
 		Route{
 			"MaxValBothVars",
@@ -101,6 +103,12 @@ func defineRoutes(influxClient dbClient) Routes {
 			"GET",
 			"/last",
 			queryHandleLast(influxClient),
+		},
+		Route{
+			"Measurement",
+			"GET",
+			"/measure",
+			handleMeasurement(influxClient, sensors),
 		},
 		Route{
 			"GeneralApiWithKey",
