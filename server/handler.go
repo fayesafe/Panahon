@@ -148,7 +148,38 @@ func queryHandleMax(influxClient database.DBClient) http.Handler {
 	})
 }
 
+
 // queryHandleMin returns the min value for a given column
+func queryHandleMin(influxClient database.DBClient) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		low, ok := vars["low"]
+		if !ok || !isStringNum(low) {
+			low = "0"
+		}
+
+		high, ok := vars["high"]
+		if !ok || !isStringNum(high) {
+			high = "2147483647000"
+		}
+
+		interval := vars["interval"]
+		col := vars["col"]
+
+		response, err := influxClient.QueryMin(col, interval, low, high)
+		if err != nil {
+			logger.Error.Println(err)
+			http.Error(
+				w,
+				"Internal Server Error",
+				http.StatusInternalServerError)
+		} else {
+			sendPayload(response, w)
+		}
+	})
+}
+
+// handleMeasurement reads the sensors and returns when finished
 func handleMeasurement(influxClient database.DBClient, sensors station.Sensors) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sensors.Read(influxClient)

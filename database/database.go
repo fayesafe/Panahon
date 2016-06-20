@@ -88,7 +88,7 @@ func (influx DBClient) QueryMax(
 	return influx.Client.Query(q)
 }
 
-func (influx dbClient) QueryMin(
+func (influx DBClient) QueryMin(
 	col string,
 	interval string,
 	offset string,
