@@ -13,3 +13,4 @@ path = "./app/"
 rain = 17
 dht22 = 4
 ldr = 27
+interval = 2

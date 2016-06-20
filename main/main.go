@@ -2,11 +2,13 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"Panahon/database"
 	"Panahon/logger"
 	"Panahon/server"
 	"Panahon/station"
+
 	"github.com/BurntSushi/toml"
 )
 
@@ -29,9 +31,10 @@ type Application struct {
 }
 
 type Station struct {
-	Rain   int
-	DHT22  int
-	LDR    int
+	Rain     int
+	DHT22    int
+	LDR      int
+	Interval time.Duration
 }
 
 func parseConfig(configPath string, config *Config) error {
@@ -69,6 +72,12 @@ func main() {
 		config.DB.Series,
 	)
 
-	go station.StartReadRoutine(influxClient, config.WeatherStation.DHT22, config.WeatherStation.LDR, config.WeatherStation.Rain)
-	server.StartServer(influxClient, config.AppPort, config.App.Path)
+	sensors := station.GetInstance()
+	sensors.InitSensors(
+		config.WeatherStation.DHT22,
+		config.WeatherStation.LDR,
+		config.WeatherStation.Rain)
+
+	server.StartServer(*influxClient, *sensors, config.AppPort, config.App.Path)
+	sensors.RunReadRoutine(*influxClient, config.WeatherStation.Interval)
 }

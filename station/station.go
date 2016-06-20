@@ -1,6 +1,7 @@
 package station
 
 import (
+	"sync"
 	"time"
 
 	"github.com/d2r2/go-dht"
@@ -15,14 +16,25 @@ import (
 	"Panahon/logger"
 )
 
-type dbClient interface {
-	QueryAll(offset string) (*client.Response, error)
-	QueryInterval(low string, high string) (*client.Response, error)
-	QueryAverage(col string, interval string, offset string, end string) (*client.Response, error)
-	QueryMax(col string, interval string, offset string, end string) (*client.Response, error)
+type Sensors struct {
+	dhtPin     int
+	ldr        embd.DigitalPin
+	rainSensor *watersensor.WaterSensor
+	bmp        *bmp180.BMP180
 }
 
-func StartReadRoutine(influx *database.DBClient, dhtPin int, ldrPin int, rainPin int) {
+var instance *Sensors
+var once sync.Once
+var mutexRead sync.Mutex
+
+func GetInstance() *Sensors {
+	once.Do(func() {
+		instance = &Sensors{}
+	})
+	return instance
+}
+
+func (sensors Sensors) InitSensors(dhtPin int, ldrPin int, rainPin int) {
 	// init GPIOs
 	if err := embd.InitGPIO(); err != nil {
 		logger.Error.Panicln(err)
@@ -39,37 +51,43 @@ func StartReadRoutine(influx *database.DBClient, dhtPin int, ldrPin int, rainPin
 		logger.Error.Panicln(err)
 	}
 	defer pin.Close()
-	rainSensor := watersensor.New(pin)
+	sensors.rainSensor = watersensor.New(pin)
 	// init LDR
-	ldr, err := embd.NewDigitalPin(ldrPin)
+	sensors.ldr, err = embd.NewDigitalPin(ldrPin)
 	if err != nil {
 		logger.Error.Panicln(err)
 	}
-	defer ldr.Close()
+	defer sensors.ldr.Close()
 	// init bmp180
-	bmp := bmp180.New(embd.NewI2CBus(1))
-	defer bmp.Close()
+	sensors.bmp = bmp180.New(embd.NewI2CBus(1))
+	defer sensors.bmp.Close()
+	// DHT22
+	sensors.dhtPin = dhtPin
+	logger.Info.Println("Sensors initialized")
+}
 
+func (sensors Sensors) RunReadRoutine(influx database.DBClient, interval time.Duration) {
 	for {
 		logger.Info.Println("Measurements started...")
-		go ReadSensors(influx, dhtPin, ldr, rainSensor, bmp)
-		logger.Info.Printf("Going to sleep for %d minutes", 10)
-		time.Sleep(10 * time.Second)
+		go sensors.Read(influx)
+		logger.Info.Printf("Going to sleep for %d seconds", 10)
+		time.Sleep(interval * time.Minute)
 	}
 }
 
-func ReadSensors(influx *database.DBClient, dhtPin int, ldr embd.DigitalPin, rainSensor *watersensor.WaterSensor, bmp *bmp180.BMP180) {
+func (sensors Sensors) Read(influx database.DBClient) {
+	mutexRead.Lock()
 	fields := map[string]interface{}{}
 	tags := map[string]string{}
 
-	if wet, err := readRainSensor(rainSensor); err == nil {
+	if wet, err := readRainSensor(sensors.rainSensor); err == nil {
 		fields["rain"] = wet
 	}
-	if temp, hum, err := readDHT22(dhtPin); err == nil {
+	if temp, hum, err := readDHT22(sensors.dhtPin); err == nil {
 		fields["temperature"] = temp
 		fields["humidity"] = hum
 	}
-	if temp, pressure, err := readBMP180(bmp); err == nil {
+	if temp, pressure, err := readBMP180(sensors.bmp); err == nil {
 		if val, ok := fields["temperature"]; ok {
 			fields["temperature"] = (temp + val.(float32)) / 2
 		} else {
@@ -77,11 +95,11 @@ func ReadSensors(influx *database.DBClient, dhtPin int, ldr embd.DigitalPin, rai
 		}
 		fields["pressure"] = pressure
 	}
-	if sun, err := readLDR(ldr); err == nil {
+	if sun, err := readLDR(sensors.ldr); err == nil {
 		fields["sun"] = sun
 	}
 
-	logger.Info.Println("Measurements finished...")
+	logger.Info.Println("Measurements finished")
 
 	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
 		Database:  influx.Database,
@@ -95,7 +113,8 @@ func ReadSensors(influx *database.DBClient, dhtPin int, ldr embd.DigitalPin, rai
 	// write point to db
 	bp.AddPoint(pt)
 	influx.Client.Write(bp)
-	logger.Info.Println("Measurements written to db...")
+	logger.Info.Println("Measurements written to db")
+	mutexRead.Unlock()
 }
 
 func readRainSensor(rainSensor *watersensor.WaterSensor) (bool, error) {
