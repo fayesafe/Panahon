@@ -42,7 +42,14 @@ panel-today {
 }
 
 #datepicker {
-  margin: 15px 0 20px 10px;
+}
+
+.top-row {
+  margin-bottom: 20px;
+}
+
+.top-options {
+  margin-top: 25px;
 }
 
 @keyframes fadeIn { from { margin-top: -10px; opacity:0; opacity: 1\9; } to { margin-top: 0; opacity:1; } }
@@ -60,3 +67,7 @@ panel-today {
 .fade-in-3 { animation-delay: .6s; }
 .fade-in-4 { animation-delay: .5s; }
 .fade-in-5 { animation-delay: .7s; }
+
+.space-left {
+  margin-left: 10px;
+}

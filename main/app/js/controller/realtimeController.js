@@ -1,29 +1,30 @@
 angular
   .module('weatherApp')
   .controller('RealtimeController',
-    ['$interval', '$rootScope', '$scope', 'DataService', 'CHART_OPTIONS', 'EVENTS',
-    function($interval, $rootScope, $scope, DataService, CHART_OPTIONS, EVENTS) {
+    ['$interval', '$scope', 'DataService', 'EVENTS',
+    function($interval, $scope, DataService, EVENTS) {
 
-      var updateData = function() {
-        var data = [{
-          time: Date.now(),
-          temperature: Math.floor((Math.random() * 25) + -10),
-          humidity: Math.floor((Math.random() * 100) + 0),
-          pressure: Math.floor((Math.random() * 1200) + 800)
-        }];
-        $rootScope.$broadcast(EVENTS.DATA_UPDATED, data);
-      }
+      $scope.updateData = function() {
+        var now = Date.now()
+        DataService.getDataBetween($scope.lastUpdate, now).then(function(rows) {
+          $scope.$broadcast(EVENTS.DATA_UPDATED, rows);
+        });
+        $scope.lastUpdate = now;
+      };
 
-      $scope.timer = $interval(updateData, 2000);
+      $scope.measure = function() {
+        $scope.disableMeasurement = true;
+        setTimeout(function(){
+          $scope.disableMeasurement = false;
+          $scope.$apply();
+        }, 2000);
+        DataService.measure().then(function() {
+          $scope.updateData();
+        });
+      };
 
-      $scope.$on("$destroy",function(){
-        $interval.cancel($scope.timer);
-      });
-
-      // start simlation of data updates if site is active and stop if inactive
-      $(window).focus(function(){
-        $scope.timer = $interval(updateData, 2000);
-      }).blur(function(){
-        $interval.cancel($scope.timer);
+      $scope.lastUpdate = Date.now();
+      DataService.getLastData(10).then(function(rows) {
+        $scope.$broadcast(EVENTS.DATA_UPDATED, rows);
       });
   }]);

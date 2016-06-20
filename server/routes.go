@@ -40,19 +40,19 @@ func defineRoutes(influxClient dbClient) Routes {
 			"MinValBothVars",
 			"GET",
 			"/min/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}/{high:[0-9]+}",
-			queryHandleMax(influxClient),
+			queryHandleMin(influxClient),
 		},
 		Route{
 			"MinValOnlyLow",
 			"GET",
 			"/min/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}",
-			queryHandleMax(influxClient),
+			queryHandleMin(influxClient),
 		},
 		Route{
 			"MinValAll",
 			"GET",
 			"/min/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}",
-			queryHandleMax(influxClient),
+			queryHandleMin(influxClient),
 		},
 		Route{
 			"Average",

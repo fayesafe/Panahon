@@ -23,6 +23,7 @@
     "jquery": "^2.2.4",
     "weather-icons": "^2.0.10",
     "eonasdan-bootstrap-datetimepicker": "^4.17.37",
-    "angular-i18n": "^1.5.7"
+    "angular-i18n": "^1.5.7",
+    "particles.js": "^2.0.0"
   }
 }

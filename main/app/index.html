@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="./css/weather.css">
 </head>
 
-<body ng-app="weatherApp" ng-cloak>
+<body ng-app="weatherApp" ng-cloak ng-controller="MainController">
 
   <div id="wrapper" ng-controller="SidebarController" ng-class="{'toggled': !isClosed}">
     <div class="overlay" ng-click="toggleNavbar()"></div>
@@ -65,7 +65,7 @@
   </div>
   <!-- /#wrapper -->
 
-  <div ng-include="'templates/footer.html'"></div>
+  <div ng-include="'templates/footer.html'" include-replace></div>
 
   <script src="./vendor/angular/angular.min.js"></script>
   <script src="./vendor/angular-i18n/angular-locale_de-de.js"></script>
@@ -76,6 +76,7 @@
   <script src="./vendor/moment/min/moment.min.js"></script>
   <script src="./vendor/bootswatch-dist/js/bootstrap.min.js"></script>
   <script src="./vendor/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+  <script src="./vendor/particles.js/particles.min.js"></script>
 
   <script src="./js/app.module.js"></script>
   <script src="./js/app.config.js"></script>
@@ -84,6 +85,7 @@
   <script src="./js/service/dataService.js"></script>
   <script src="./js/service/datetimeService.js"></script>
 
+  <script src="./js/controller/mainController.js"></script>
   <script src="./js/controller/sidebarController.js"></script>
   <script src="./js/controller/weekController.js"></script>
   <script src="./js/controller/dayController.js"></script>
@@ -93,5 +95,8 @@
   <script src="./js/controller/chartController.js"></script>
 
   <script src="./js/directive/chartDirective.js"></script>
+  <script src="./js/directive/includeReplaceDirective.js"></script>
+
+  <script src="./js/particles.js"></script>
 </body>
 </html>

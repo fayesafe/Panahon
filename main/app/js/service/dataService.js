@@ -33,28 +33,28 @@ angular
 
     return {
       getDataOfYear: function(ts) {
-        var tsStart = DatetimeService.getStartTimestampOfYear(ts, true);
-        var tsEnd = DatetimeService.getNextYearTimestamp(ts, true);
+        var tsStart = DatetimeService.getStartTimestampOfYear(ts);
+        var tsEnd = DatetimeService.getNextYearTimestamp(ts);
         console.log(new Date(tsStart).toUTCString(),new Date(tsEnd).toUTCString());
         return getData(tsStart, tsEnd, '1w');
       },
       getDataOfMonth: function(ts) {
-        var tsStart = DatetimeService.getStartTimestampOfMonth(ts, true);
-        var tsEnd = DatetimeService.getNextMonthTimestamp(ts, true);
+        var tsStart = DatetimeService.getLastDayTimestamp(
+          DatetimeService.getStartTimestampOfMonth(ts));
+        var tsEnd = DatetimeService.getNextMonthTimestamp(ts);
         console.log(new Date(tsStart).toUTCString(),new Date(tsEnd).toUTCString());
-
         return getData(tsStart, tsEnd, '1d');
       },
       getDataOfDay: function(ts) {
-        var tsStart = DatetimeService.getStartTimestampOfDay(ts);
+        var tsStart = DatetimeService.getStartTimestampOfDay(ts) - 3600000;
         var tsEnd = DatetimeService.getNextDayTimestamp(ts);
         console.log(new Date(tsStart).toUTCString(),new Date(tsEnd).toUTCString());
         return getData(tsStart, tsEnd, '1h');
       },
       getAggregatedDataOfDay: function(ts) {
         var deferred = $q.defer();
-        var tsStart = DatetimeService.getStartTimestampOfDay(ts, true);
-        var tsEnd = DatetimeService.getNextDayTimestamp(ts, true);
+        var tsStart = DatetimeService.getStartTimestampOfDay(ts);
+        var tsEnd = DatetimeService.getNextDayTimestamp(ts);
 
         $.when(
           $.get('/api/max/temperature/1d/'+tsStart+'/'+tsEnd),
@@ -82,6 +82,42 @@ angular
           deferred.reject(response);
         });
 
+        return deferred.promise;
+      },
+      getLastData: function(count) {
+        var deferred = $q.defer();
+        $.get('/api/last/'+count)
+          .done(function(response) {
+            var data = response.Series[0].values;
+            data.splice(0, 0, response.Series[0].columns);
+            deferred.resolve(data);
+          }).fail(function(response) {
+            deferred.reject(response);
+          });
+        return deferred.promise;
+      },
+      getDataBetween: function(tsStart, tsEnd) {
+        var deferred = $q.defer();
+        $.get('/api/range/'+DatetimeService.timestampToUTC(tsStart)+'/'+DatetimeService.timestampToUTC(tsEnd))
+          .done(function(response) {
+            if (response.Series) {
+              deferred.resolve(response.Series[0].values);
+            } else {
+              deferred.reject(response);
+            }
+          }).fail(function(response) {
+            deferred.reject(response);
+          });
+        return deferred.promise;
+      },
+      measure: function() {
+        var deferred = $q.defer();
+        $.get('/api/measure')
+          .done(function(response) {
+            deferred.resolve(response);
+          }).fail(function(response) {
+            deferred.rejectresponse();
+          });
         return deferred.promise;
       }
     };

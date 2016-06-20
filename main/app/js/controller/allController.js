@@ -11,7 +11,6 @@ angular
         defaultDate: Date.now()
       }).on('dp.change', function(e) {
         var ts = e.date.valueOf();
-        console.log('change',new Date(ts).toString());
         $scope.loadData(ts);
       }).data("DateTimePicker");
 
@@ -27,7 +26,9 @@ angular
           $scope.formatTimestamp = DatetimeService.formatDay;
         } else {
           $scope.getData = DataService.getDataOfYear;
-          $scope.formatTimestamp = function(ts, index) { return index+'. Woche'};
+          $scope.formatTimestamp = function(ts, toLocal, index) {
+            return index+'. Woche';
+          };
         }
 
         $scope.loadData($scope.datepicker.date().valueOf());
@@ -37,7 +38,7 @@ angular
         $scope.getData(ts).then(function(rows) {
           rows.forEach(function(elem, index, array) {
             if (index != 0) {
-              elem[0] = $scope.formatTimestamp(elem[0], index);
+              elem[0] = $scope.formatTimestamp(elem[0], true, index);
             }
           });
           $scope.$broadcast(EVENTS.DATA_UPDATED, rows);
@@ -45,8 +46,4 @@ angular
           console.log('Error:',response);
         });
       };
-
-      /*setTimeout(function($scope) {
-        $scope.loadData($scope.datepicker.date().valueOf());
-      }, 1000, $scope);*/
   }]);

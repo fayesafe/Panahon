@@ -3,15 +3,8 @@ text {
   font-size: 14px;
 }
 
-.c3-line-temperature {
-  stroke-width: 3px!important;
-  /*stroke-dasharray: 8;
-  -webkit-animation: dash 1s linear infinite;
-  -webkit-animation-name: temperature;*/
-}
-
-.c3-target-temperature .c3-text {
-  /*fill: #B65F13!important;*/
+.c3-line-temperature, .c3-line-sun, .c3-line-humidity, .c3-line-rain {
+  stroke-width: 2px!important;
 }
 
 /*@keyframes temperature {

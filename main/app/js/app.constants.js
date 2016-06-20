@@ -159,8 +159,7 @@ angular
         }
       }
     },
-    'ALL': {
-      bindto: '#chart-all',
+    'REALTIME': {
       size: {
         height: 500
       },
@@ -178,12 +177,48 @@ angular
         types: { temperature: 'spline', humidity: 'line', pressure: 'bar', rain: 'area-step', sun: 'spline' },
         labels: {
           format: {
-            temperature: function (v, id, i, j) { return v + '°C'; },
-            humidity: function (v, id, i, j) { return v + '%'; },
-            //pressure: function (v, id, i, j) { return v + 'hPa'; },
+            temperature: function (v, id, i, j) { return v.toFixed(1) + '°C'; },
+            humidity: function (v, id, i, j) { return v.toFixed(1) + '%'; },
           }
         },
-        colors: { temperature: '#ff851b', humidity: '#28b62c', pressure: '#3498db' },
+        colors: { temperature: '#ff851b', humidity: '#28b62c', pressure: '#C5EFF7', sun: '#EC644B' },
+        empty: { label: { text: "Loading data..." } }
+      },
+      axis: {
+        x: {
+          type: 'timeseries',
+          tick: { format: '%H:%M.%S' },
+        },
+        y2: {
+          show: true,
+          tick: { format: function (d) { return d + ' hPa'; } }
+        }
+      },
+      grid: { y: { lines: [{ value: 0 }] } }
+    },
+    'ALL': {
+      size: {
+        height: 500
+      },
+      data: {
+        x: 'time',
+        rows: [],
+        axes: {
+          ts: 'x',
+          temperature: 'y',
+          pressure: 'y2',
+          sun: 'y2'
+        },
+        names: { temperature: 'Temperatur', humidity: 'Luftfeuchtigkeit', pressure: 'Luftdruck', rain: 'Regen', sun: 'Sonne' },
+        classes: {  },
+        types: { temperature: 'spline', humidity: 'line', pressure: 'bar', rain: 'area-step', sun: 'spline' },
+        labels: {
+          format: {
+            temperature: function (v, id, i, j) { return v.toFixed(1) + '°C'; },
+            humidity: function (v, id, i, j) { return v.toFixed(1) + '%'; },
+          }
+        },
+        colors: { temperature: '#ff851b', humidity: '#28b62c', pressure: '#C5EFF7' },
         empty: { label: { text: "Loading data..." } }
       },
       axis: {
