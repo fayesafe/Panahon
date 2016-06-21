@@ -14,6 +14,26 @@ import (
 	"github.com/influxdata/influxdb/client/v2"
 )
 
+type dbConnection interface {
+	QueryAll(offset string) (*client.Response, error)
+	QueryInterval(low string, high string) (*client.Response, error)
+	QueryAverage(
+		col string,
+		interval string,
+		offset string,
+		end string) (*client.Response, error)
+	QueryMax(
+		col string,
+		interval string,
+		offset string,
+		end string) (*client.Response, error)
+	QueryMin(
+		col string,
+		interval string,
+		offset string,
+		end string) (*client.Response, error)
+}
+
 // staticServe serving front end application of the weather station
 // Takes path as argument, pointing to root dir of the app
 func staticServe(path string) http.Handler {
@@ -39,7 +59,7 @@ func apiHandler() http.Handler {
 
 // queryHandleInterval is a HTTP handler for querying an interval of time
 // using database API
-func queryHandleInterval(influxClient database.DBClient) http.Handler {
+func queryHandleInterval(influxClient dbConnection) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -68,7 +88,7 @@ func queryHandleInterval(influxClient database.DBClient) http.Handler {
 
 // queryHandleLast is a HTTP handler for querying all / last n entries
 // using database API
-func queryHandleLast(influxClient database.DBClient) http.Handler {
+func queryHandleLast(influxClient dbConnection) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		offset, ok := vars["last"]
@@ -91,7 +111,7 @@ func queryHandleLast(influxClient database.DBClient) http.Handler {
 
 // queryAverage returns the average for a specific interval starting from an
 // offset
-func queryHandleAverage(influxClient database.DBClient) http.Handler {
+func queryHandleAverage(influxClient dbConnection) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		low, ok := vars["low"]
@@ -119,7 +139,7 @@ func queryHandleAverage(influxClient database.DBClient) http.Handler {
 }
 
 // queryHandleMax returns the max value for a given column
-func queryHandleMax(influxClient database.DBClient) http.Handler {
+func queryHandleMax(influxClient dbConnection) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		low, ok := vars["low"]
@@ -148,9 +168,8 @@ func queryHandleMax(influxClient database.DBClient) http.Handler {
 	})
 }
 
-
 // queryHandleMin returns the min value for a given column
-func queryHandleMin(influxClient database.DBClient) http.Handler {
+func queryHandleMin(influxClient dbConnection) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		low, ok := vars["low"]
@@ -180,9 +199,9 @@ func queryHandleMin(influxClient database.DBClient) http.Handler {
 }
 
 // handleMeasurement reads the sensors and returns when finished
-func handleMeasurement(influxClient database.DBClient, sensors station.Sensors) http.Handler {
+func handleMeasurement(influxClient dbConnection, sensors station.Sensors) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sensors.Read(influxClient)
+		sensors.Read(influxClient.(database.DBClient))
 
 		w.Header().Set("Content-Type", "text/json")
 		w.Write([]byte("done"))
@@ -212,7 +231,7 @@ func isStringNum(strToCheck string) bool {
 }
 
 // StartServer starts server
-func StartServer(influxClient database.DBClient, sensors station.Sensors, appPort string, staticPath string) {
+func StartServer(influxClient dbConnection, sensors station.Sensors, appPort string, staticPath string) {
 	router := mux.NewRouter()
 	router.StrictSlash(false)
 

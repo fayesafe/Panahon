@@ -1,7 +1,6 @@
 package server
 
 import (
-	"Panahon/database"
 	"Panahon/station"
 	"net/http"
 
@@ -18,7 +17,7 @@ type Route struct {
 type Routes []Route
 
 // defineRoutes contains all routes of the API
-func defineRoutes(influxClient database.DBClient, sensors station.Sensors) Routes {
+func defineRoutes(influxClient dbConnection, sensors station.Sensors) Routes {
 	var routes = Routes{
 		Route{
 			"MaxValBothVars",

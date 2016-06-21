@@ -16,6 +16,26 @@ import (
 	"Panahon/logger"
 )
 
+type dbConnection interface {
+	QueryAll(offset string) (*client.Response, error)
+	QueryInterval(low string, high string) (*client.Response, error)
+	QueryAverage(
+		col string,
+		interval string,
+		offset string,
+		end string) (*client.Response, error)
+	QueryMax(
+		col string,
+		interval string,
+		offset string,
+		end string) (*client.Response, error)
+	QueryMin(
+		col string,
+		interval string,
+		offset string,
+		end string) (*client.Response, error)
+}
+
 type Sensors struct {
 	dhtPin     int
 	ldr        embd.DigitalPin
@@ -29,8 +49,8 @@ var once sync.Once
 var mutexRead sync.Mutex
 
 func InitSensors(dhtPin int, ldrPin int, rainPin int) *Sensors {
-    sensors := new(Sensors)
-    var err error
+	sensors := new(Sensors)
+	var err error
 	// init GPIOs
 	if err := embd.InitGPIO(); err != nil {
 		logger.Error.Panicln(err)
@@ -56,7 +76,7 @@ func InitSensors(dhtPin int, ldrPin int, rainPin int) *Sensors {
 	sensors.dhtPin = dhtPin
 	logger.Info.Println("Sensors initialized")
 
-    return sensors
+	return sensors
 }
 
 func (sensors Sensors) Close() {
@@ -82,11 +102,11 @@ func (sensors Sensors) Read(influx database.DBClient) {
 	tags := map[string]string{}
 
 	if wet, err := readRainSensor(sensors.rainSensor); err == nil {
-        if wet {
-            fields["rain"] = 1
-        } else {
-            fields["rain"] = 0
-        }
+		if wet {
+			fields["rain"] = 1
+		} else {
+			fields["rain"] = 0
+		}
 	}
 	if temp, hum, err := readDHT22(sensors.dhtPin); err == nil {
 		fields["temperature"] = temp

@@ -9,7 +9,7 @@ import (
 )
 
 type DBClient struct {
-	Client client.Client
+	Client   client.Client
 	Database string
 	Series   string
 }
