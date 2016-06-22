@@ -1,7 +1,7 @@
 package main
 
 import (
-    "os"
+	"os"
 	"os/signal"
 	"time"
 
@@ -73,29 +73,30 @@ func main() {
 		config.DB.Series,
 	)
 
-    sensors := station.InitSensors(
+	/*sensors := station.InitSensors(
 		config.WeatherStation.DHT22,
 		config.WeatherStation.LDR,
 		config.WeatherStation.Rain)
 
-    handleInterrupt(sensors)
+	handleInterrupt(sensors)
 
-	go sensors.RunReadRoutine(*influxClient, config.WeatherStation.Interval)
+	go sensors.RunReadRoutine(*influxClient, config.WeatherStation.Interval)*/
+	sensors := new(station.Sensors)
 	server.StartServer(*influxClient, *sensors, config.AppPort, config.App.Path)
 
 }
 
 func handleInterrupt(sensors *station.Sensors) {
-    c := make(chan os.Signal, 1)
-    signal.Notify(c, os.Interrupt)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
 
-    go func() {
-        for sig := range c {
-            logger.Info.Printf("Handling signal: %v\n", sig)
-            sensors.Close()
-            close(c)
-            logger.Info.Println("Exiting program")
-            os.Exit(0)
-        }
-    }()
+	go func() {
+		for sig := range c {
+			logger.Info.Printf("Handling signal: %v\n", sig)
+			sensors.Close()
+			close(c)
+			logger.Info.Println("Exiting program")
+			os.Exit(0)
+		}
+	}()
 }

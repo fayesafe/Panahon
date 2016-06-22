@@ -5,16 +5,47 @@ angular
     var localOffset = new Date().getTimezoneOffset()*60*1000;
 
     return {
-      formatTime: function(tsUTC, toLocal) {
-        var a = new Date(tsUTC + localOffset);
-        var h = a.getHours();
-        var m = a.getMinutes();
+      toUtcDate: function(date) {
+        return new Date(date.getTime() - localOffset);
+      },
+      toLocalTimestamp: function(ts) {
+        return ts + localOffset;
+      },
+      toDateString: function(date) {
+        return date.toISOString().slice(0, 10);
+      },
+      toTimeString: function(date) {
+        var h = date.getHours();
+        var m = date.getMinutes();
         if (h < 10) h = '0' + h;
         if (m < 10) m = '0' + m;
         return h + ':' + m;
       },
-      formatDay: function(tsUTC) {
-        return new Date(tsUTC + localOffset).getDate();
+      toDayString: function(date) {
+        return date.getDate() + '. Tag';
+      },
+      getNextDay: function(date) {
+        var d = new Date(date);
+        d.setDate(d.getDate() + 1);
+        return d;
+      },
+      getNextMonth: function(date) {
+        var d = new Date(date);
+        d.setMonth(d.getMonth() + 1);
+        return d;
+      },
+      getNextYear: function(date) {
+        var d = new Date(date);
+        d.setFullYear(d.getFullYear() + 1);
+        return d;
+      },
+      getStartOfMonth: function(date) {
+        date.setDate(1);
+        return date;
+      },
+      getStartOfYear: function(date) {
+        date.setMonth(0);
+        return date;
       },
       timestampToUTC: function(ts) {
         return ts - localOffset;

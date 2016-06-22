@@ -20,38 +20,38 @@
     <div class="day fade-in fade-in-{{$index}}"
       ng-class="{'col-lg-3': default, 'col-lg-2': !default}"
       ng-if="(default && $index < 4) || !default"
-      ng-click="open(day)">
+      ng-click="open(day[0])">
       <div class="panel" ng-class="{'panel-warning panel-today': $first, 'panel-info panel-past-day': !$first}">
-        <div class="panel-heading">{{day.ts | date:'dd.MM.yyyy'}}</div>
+        <div class="panel-heading">{{day[0] | date:'dd.MM.yyyy'}}</div>
         <div class="panel-body">
           <h2>
-            <i class="wi wi-day-sunny"></i>&nbsp;&nbsp;{{day.temperatureMax | number:0}} °C
-            <span class="min-temperature">{{day.temperatureMin | number:0}} °C</span>
+            <i class="wi wi-day-sunny"></i>&nbsp;&nbsp;{{day[2] | number:0}} °C
+            <span class="min-temperature">{{day[3] | number:0}} °C</span>
           </h2>
           <br/>
           <p>
             <strong>Regen</strong>
             <span ng-show="default">&nbsp;&nbsp;</span>
             <span ng-show="!default"></br></span>
-            {{day.rain | number:1}}%
+            {{day[5] | number:1}}%
           </p>
           <p>
             <strong>Luftdruck</strong>
             <span ng-show="default">&nbsp;&nbsp;</span>
             <span ng-show="!default"></br></span>
-            {{day.pressure | number:0}} hPa
+            {{day[4] | number:0}} hPa
           </p>
           <p>
             <strong>Sonnenstunden</strong>
             <span ng-show="default">&nbsp;&nbsp;</span>
             <span ng-show="!default"></br></span>
-            {{day.sunHours | number:0}} Std.
+            {{day[6] < 0.5 ? 'Vorwiegend sonnig' : 'Vorwiegend bedeckt'}}
           </p>
           <p>
             <strong>Luftfeuchtigkeit</strong>
             <span ng-show="default">&nbsp;&nbsp;</span>
             <span ng-show="!default"></br></span>
-            {{day.humidity | number:1}}%
+            {{day[1] | number:1}}%
           </p>
         </div>
       </div>

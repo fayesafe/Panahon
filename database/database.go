@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"time"
 
 	"Panahon/logger"
 
@@ -12,6 +13,46 @@ type DBClient struct {
 	Client   client.Client
 	Database string
 	Series   string
+}
+
+func (influx DBClient) SaveData(fields map[string]interface{}, tags map[string]string) {
+	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
+		Database:  influx.Database,
+		Precision: "ms",
+	})
+	pt, err := client.NewPoint(influx.Series, tags, fields, time.Now())
+	if err != nil {
+		logger.Error.Println(err)
+		return
+	}
+
+	// write point to db
+	bp.AddPoint(pt)
+	influx.Client.Write(bp)
+	logger.Info.Printf("Data written to db: %v", fields)
+}
+
+func (influx DBClient) QueryData(series string, startDate string, endDate string) (*client.Response, error) {
+	var q client.Query
+
+	query := fmt.Sprintf(
+		"SELECT * FROM %s WHERE %s <= time AND time < %s", series, startDate, endDate)
+	q = client.NewQuery(query, influx.Database, "ms")
+	logger.Info.Printf("Getting data of %s from %s to %s", series, startDate, endDate)
+	logger.Info.Println(query)
+
+	return influx.Client.Query(q)
+}
+
+func (influx DBClient) QuerySensorData(last string) (*client.Response, error) {
+	var q client.Query
+
+	query := fmt.Sprintf(
+		"SELECT * FROM sensors ORDER BY DESC LIMIT %s", last)
+	q = client.NewQuery(query, influx.Database, "ms")
+	logger.Info.Printf("Getting last %s entries", last)
+
+	return influx.Client.Query(q)
 }
 
 // QueryAll queries all entries of Influx DB, or last n entries

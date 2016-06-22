@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/d2r2/go-dht"
-	"github.com/influxdata/influxdb/client/v2"
 	"github.com/kidoman/embd"
 	"github.com/kidoman/embd/sensor/bmp180"
 	"github.com/kidoman/embd/sensor/watersensor"
@@ -17,23 +16,7 @@ import (
 )
 
 type dbConnection interface {
-	QueryAll(offset string) (*client.Response, error)
-	QueryInterval(low string, high string) (*client.Response, error)
-	QueryAverage(
-		col string,
-		interval string,
-		offset string,
-		end string) (*client.Response, error)
-	QueryMax(
-		col string,
-		interval string,
-		offset string,
-		end string) (*client.Response, error)
-	QueryMin(
-		col string,
-		interval string,
-		offset string,
-		end string) (*client.Response, error)
+	SaveData(fields map[string]interface{}, tags map[string]string)
 }
 
 type Sensors struct {
@@ -96,7 +79,7 @@ func (sensors Sensors) RunReadRoutine(influx database.DBClient, interval time.Du
 	}
 }
 
-func (sensors Sensors) Read(influx database.DBClient) {
+func (sensors Sensors) Read(influx dbConnection) {
 	mutexRead.Lock()
 	fields := map[string]interface{}{}
 	tags := map[string]string{}
@@ -125,20 +108,7 @@ func (sensors Sensors) Read(influx database.DBClient) {
 	}
 
 	logger.Info.Println("Measurements finished")
-
-	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  influx.Database,
-		Precision: "ms",
-	})
-	pt, err := client.NewPoint(influx.Series, tags, fields, time.Now())
-	if err != nil {
-		logger.Error.Println(err)
-	}
-
-	// write point to db
-	bp.AddPoint(pt)
-	influx.Client.Write(bp)
-	logger.Info.Println("Measurements written to db")
+	influx.SaveData(fields, tags)
 	mutexRead.Unlock()
 }
 

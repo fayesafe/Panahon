@@ -4,22 +4,24 @@ angular
     ['$routeParams', '$scope', 'DataService', 'EVENTS',
     function($routeParams, $scope, DataService, EVENTS) {
 
-      var ts = Date.now();
+      var date = new Date();
       if ($routeParams.ts) {
-        ts = 1*$routeParams.ts;
+        date = new Date(1*$routeParams.ts);
       }
 
-      $scope.loadDay = function(ts) {
-        DataService.getDataOfDay(ts).then(function(rows) {
+      $scope.loadDay = function(date) {
+        DataService.getData('hours', date).then(function(rows) {
           setTimeout(function() {
+            console.log(rows);
             $scope.$broadcast(EVENTS.DATA_UPDATED, rows);
           }, 100);
         }, function(response) {
           console.log('Error:',response);
         });
 
-        DataService.getAggregatedDataOfDay(ts).then(function(day) {
-          $scope.day = day;
+        DataService.getData('days', date).then(function(days) {
+          $scope.day = days[1];
+          console.log(days);
         }, function(response) {
           console.log('Error:',response);
         });
@@ -27,11 +29,11 @@ angular
 
       $scope.datepicker = $('#datepicker').datetimepicker({
         format: 'DD.MM.YYYY',
-        defaultDate: new Date(ts)
+        defaultDate: date
       }).on('dp.change', function(e) {
         var ts = e.date.valueOf();
-        $scope.loadDay(ts);
+        $scope.loadDay(new Date(ts));
       }).data("DateTimePicker");
 
-      $scope.loadDay(ts);
+      $scope.loadDay(date);
 }]);

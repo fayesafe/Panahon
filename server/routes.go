@@ -20,6 +20,24 @@ type Routes []Route
 func defineRoutes(influxClient dbConnection, sensors station.Sensors) Routes {
 	var routes = Routes{
 		Route{
+			"DataBetweenDates",
+			"GET",
+			"/{series:(hours|days|weeks)}/{startDate:[0-9]{4}-[0-9]{2}-[0-9]{2}}/{endDate:[0-9]{4}-[0-9]{2}-[0-9]{2}}",
+			queryHandleData(influxClient),
+		},
+		Route{
+			"DataOfDate",
+			"GET",
+			"/{series:(hours|days|weeks)}/{startDate:[0-9]{4}-[0-9]{2}-[0-9]{2}}",
+			queryHandleData(influxClient),
+		},
+		Route{
+			"SensorData",
+			"GET",
+			"/sensors/{last:[0-9]+}",
+			queryHandleSensorData(influxClient),
+		},
+		Route{
 			"MaxValBothVars",
 			"GET",
 			"/max/{col:[a-z]+}/{interval:[0-9]+((ms)|[usmhdw])}/{low:[0-9]+}/{high:[0-9]+}",

@@ -1,6 +1,6 @@
 <div class="row top-row">
   <div class="col-lg-6">
-    <h1 class="">Tagesansicht, {{day.ts | date:'dd.MM.yyyy'}}</h1>
+    <h1 class="">Tagesansicht, {{day[0] | date:'dd.MM.yyyy'}}</h1>
   </div>
   <div class="col-lg-6 top-options">
     <form class="form-inline pull-right">
@@ -17,20 +17,19 @@
   </div>
 </div>
 
-<div class="row">
-  <div class="col-lg-4 day">
+<div class="row">  <div class="col-lg-4 day">
     <div class="panel panel-info">
-      <div class="panel-heading"><strong>{{day.ts | date:'dd.MM.yyyy'}}</strong></div>
+      <div class="panel-heading"><strong>{{day[0] | date:'dd.MM.yyyy'}}</strong></div>
       <div class="panel-body">
         <h1>
-          <i class="wi wi-day-sunny"></i>&nbsp;&nbsp;{{day.temperatureMax | number:0}} °C
-          <span class="min-temperature">{{day.temperatureMin | number:0}} °C</span>
+          <i class="wi wi-day-sunny"></i>&nbsp;&nbsp;{{day[2] | number:0}} °C
+          <span class="min-temperature">{{day[3] | number:0}} °C</span>
         </h1>
         <br/>
-        <p><strong>Regen</strong>&nbsp;&nbsp; {{day.rain | number:1}}%</p>
-        <p><strong>Luftdruck</strong>&nbsp;&nbsp; {{day.pressure | number:0}} hPa</p>
-        <p><strong>Sonnenstunden</strong>&nbsp;&nbsp; {{day.sunHours | number:0}} Std.</p>
-        <p><strong>Luftfeuchtigkeit</strong>&nbsp;&nbsp; {{day.humidity | number:1}}%</p>
+        <p><strong>Regen</strong>&nbsp;&nbsp; {{day[5] | number:1}}%</p>
+        <p><strong>Luftdruck</strong>&nbsp;&nbsp; {{day[4] | number:0}} hPa</p>
+        <p><strong>Sonnenstunden</strong>&nbsp;&nbsp; {{day[6] < 0.5 ? 'Vorwiegend sonnig' : 'Vorwiegend bedeckt'}}</p>
+        <p><strong>Luftfeuchtigkeit</strong>&nbsp;&nbsp; {{day[1] | number:1}}%</p>
       </div>
     </div>
   </div>

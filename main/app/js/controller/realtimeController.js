@@ -5,26 +5,21 @@ angular
     function($interval, $scope, DataService, EVENTS) {
 
       $scope.updateData = function() {
-        var now = Date.now()
-        DataService.getDataBetween($scope.lastUpdate, now).then(function(rows) {
-          $scope.$broadcast(EVENTS.DATA_UPDATED, rows);
+        DataService.getLastData(10).then(function(rows) {
+          setTimeout(function(){
+            $scope.$broadcast(EVENTS.DATA_UPDATED, rows);
+          }, 100);
         });
-        $scope.lastUpdate = now;
       };
 
       $scope.measure = function() {
         $scope.disableMeasurement = true;
-        setTimeout(function(){
-          $scope.disableMeasurement = false;
-          $scope.$apply();
-        }, 2000);
         DataService.measure().then(function() {
           $scope.updateData();
+          $scope.disableMeasurement = false;
+          $scope.$apply();
         });
       };
 
-      $scope.lastUpdate = Date.now();
-      DataService.getLastData(10).then(function(rows) {
-        $scope.$broadcast(EVENTS.DATA_UPDATED, rows);
-      });
+      $scope.updateData();
   }]);

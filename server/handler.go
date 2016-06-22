@@ -15,6 +15,8 @@ import (
 )
 
 type dbConnection interface {
+	QuerySensorData(last string) (*client.Response, error)
+	QueryData(series string, startDate string, endDate string) (*client.Response, error)
 	QueryAll(offset string) (*client.Response, error)
 	QueryInterval(low string, high string) (*client.Response, error)
 	QueryAverage(
@@ -53,6 +55,51 @@ func apiHandler() http.Handler {
 
 		if len(key) > 0 {
 			fmt.Fprintf(w, "\nKey: %s", key)
+		}
+	})
+}
+
+func queryHandleData(influxClient dbConnection) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		series, _ := vars["series"]
+		startDate, _ := vars["startDate"]
+		endDate, ok := vars["endDate"]
+
+		startDate = "'" + startDate + "'"
+		if !ok {
+			endDate = startDate + " + 1d"
+		} else {
+			endDate = "'" + endDate + "'"
+		}
+
+		response, err := influxClient.QueryData(series, startDate, endDate)
+		if err != nil {
+			logger.Error.Println(err)
+			http.Error(
+				w,
+				"Internal Server Error",
+				http.StatusInternalServerError)
+		} else {
+			sendPayload(response, w)
+		}
+	})
+}
+
+func queryHandleSensorData(influxClient dbConnection) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		last, _ := vars["last"]
+
+		response, err := influxClient.QuerySensorData(last)
+		if err != nil {
+			logger.Error.Println(err)
+			http.Error(
+				w,
+				"Internal Server Error",
+				http.StatusInternalServerError)
+		} else {
+			sendPayload(response, w)
 		}
 	})
 }

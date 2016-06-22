@@ -6,17 +6,17 @@ angular
 
       $scope.default = true;
       $scope.days = [{},{},{},{},{},{}]
-      $scope.open = function(day) {
-        $location.url('/day?ts=' + day.ts);
+      $scope.open = function(ts) {
+        $location.url('/day?ts=' + ts);
       }
 
-      var ts = Date.now();
-      for (var i=0; i<6; i++) {
-        (function(i) {
-          DataService.getAggregatedDataOfDay(ts).then(function(day) {
-            $scope.days[i] = day;
-          });
-        })(i);
-        ts = DatetimeService.getLastDayTimestamp(ts);
-      }
+      var today = new Date();
+      today.setDate(today.getDate() - 30); // TODO
+      var sixDaysAgo = new Date(today);
+      sixDaysAgo.setDate(sixDaysAgo.getDate() - 6);
+
+      DataService.getData('days', sixDaysAgo, today).then(function(days) {
+        days.splice(0, 1);
+        $scope.days = days;
+      });
 }]);

@@ -3,7 +3,7 @@ text {
   font-size: 14px;
 }
 
-.c3-line-temperature, .c3-line-sun, .c3-line-humidity, .c3-line-rain {
+.c3-line-temperature, .c3-line-max-temperature, .c3-line-min-temperature, .c3-line-sun, .c3-line-humidity, .c3-line-rain {
   stroke-width: 2px!important;
 }
 
@@ -18,10 +18,6 @@ text {
 }
 .grid path {
     stroke-width: 0;
-}
-
-.temperature {
-
 }
 
 #chart-all>svg>g:nth-child(3) .tick {

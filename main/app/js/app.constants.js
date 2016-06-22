@@ -9,15 +9,15 @@ angular
         x: 'time',
         rows: [],
         hide: ['humidity', 'sun', 'rain', 'pressure'],
-        names: { temperature: 'Temperatur' },
-        classes: { temperature: 'temperature' },
-        types: { temperature: 'spline' },
+        names: { temperature: 'Temperatur', 'min_temperature': 'Min. Temperatur', 'max_temperature': 'Max. Temperatur' },
+        classes: { temperature: 'temperature', 'min_temperature': 'min-temperature', 'max_temperature': 'max-temperature' },
+        types: { temperature: 'line', 'min_temperature': 'line', 'max_temperature': 'line' },
         labels: {
           format: {
             temperature: function (v, id, i, j) { return v + '°C'; }
           }
         },
-        colors: { temperature: '#ff851b' },
+        colors: { temperature: '#ff851b',  'min_temperature': '#3498db', 'max_temperature': '#e74c3c' },
         empty: {
           label: {
             text: "Loading data..."
@@ -40,7 +40,7 @@ angular
       data: {
         x: 'time',
         rows: [],
-        hide: ['temperature', 'sun', 'rain', 'pressure'],
+        hide: ['temperature', 'sun', 'rain', 'pressure', 'min_temperature', 'max_temperature'],
         names: { humidity: 'Luftfeuchtigkeit' },
         classes: { humidity: 'humidity' },
         types: { humidity: 'line' },
@@ -57,7 +57,7 @@ angular
         }
       },
       legend: {
-        hide: ['temperature', 'sun', 'rain', 'pressure']
+        hide: ['temperature', 'sun', 'rain', 'pressure', 'min_temperature', 'max_temperature']
       },
       axis: {
         x: {
@@ -70,7 +70,7 @@ angular
       data: {
         x: 'time',
         rows: [],
-        hide: ['humidity', 'sun', 'rain', 'temperature'],
+        hide: ['humidity', 'sun', 'rain', 'temperature', 'min_temperature', 'max_temperature'],
         names: { pressure: 'Luftdruck' },
         classes: { pressure: 'pressure' },
         type: 'bar',
@@ -82,7 +82,7 @@ angular
         }
       },
       legend: {
-        hide: ['humidity', 'sun', 'rain', 'temperature']
+        hide: ['humidity', 'sun', 'rain', 'temperature', 'min_temperature', 'max_temperature']
       },
       axis: {
         x: {
@@ -100,7 +100,7 @@ angular
       data: {
         x: 'time',
         rows: [],
-        hide: ['humidity', 'sun', 'temperature', 'pressure'],
+        hide: ['humidity', 'sun', 'temperature', 'pressure', 'min_temperature', 'max_temperature'],
         names: { rain: 'Regen' },
         classes: { rain: 'rain' },
         types: { rain: 'area-step' },
@@ -112,7 +112,7 @@ angular
         }
       },
       legend: {
-        hide: ['time', 'humidity', 'sun', 'temperature', 'pressure']
+        hide: ['time', 'humidity', 'sun', 'temperature', 'pressure', 'min_temperature', 'max_temperature']
       },
       axis: {
         x: {
@@ -130,7 +130,7 @@ angular
       data: {
         x: 'time',
         rows: [],
-        hide: ['humidity', 'rain', 'temperature', 'pressure'],
+        hide: ['humidity', 'rain', 'temperature', 'pressure', 'min_temperature', 'max_temperature'],
         names: { sun: 'Sonne' },
         classes: { sun: 'rain' },
         types: { sun: 'spline' },
@@ -142,7 +142,7 @@ angular
         }
       },
       legend: {
-        hide: ['time', 'humidity', 'rain', 'temperature', 'pressure']
+        hide: ['time', 'humidity', 'rain', 'temperature', 'pressure', 'min_temperature', 'max_temperature']
       },
       axis: {
         x: {
@@ -172,16 +172,18 @@ angular
           pressure: 'y2',
           sun: 'y2'
         },
-        names: { temperature: 'Temperatur', humidity: 'Luftfeuchtigkeit', pressure: 'Luftdruck', rain: 'Regen', sun: 'Sonne' },
-        classes: {  },
-        types: { temperature: 'spline', humidity: 'line', pressure: 'bar', rain: 'area-step', sun: 'spline' },
+        names: { temperature: 'Temperatur', humidity: 'Luftfeuchtigkeit', pressure: 'Luftdruck', rain: 'Regen', sun: 'Sonne', 'min_temperature': 'Min. Temperatur', 'max_temperature': 'Max. Temperatur'  },
+        classes: { temperature: 'temperature', 'min_temperature': 'min-temperature', 'max_temperature': 'max-temperature' },
+        types: { temperature: 'spline', 'min_temperature': 'spline', 'max_temperature': 'spline', humidity: 'line', pressure: 'bar', rain: 'area-step', sun: 'spline' },
         labels: {
           format: {
             temperature: function (v, id, i, j) { return v.toFixed(1) + '°C'; },
+            min_temperature: function (v, id, i, j) { return v.toFixed(1) + '°C'; },
+            max_temperature: function (v, id, i, j) { return v.toFixed(1) + '°C'; },
             humidity: function (v, id, i, j) { return v.toFixed(1) + '%'; },
           }
         },
-        colors: { temperature: '#ff851b', humidity: '#28b62c', pressure: '#C5EFF7', sun: '#EC644B' },
+        colors: { temperature: '#ff851b', 'min_temperature': '#3498db', 'max_temperature': '#e74c3c', humidity: '#28b62c', pressure: '#C5EFF7', sun: '#ff4136' },
         empty: { label: { text: "Loading data..." } }
       },
       axis: {
@@ -209,16 +211,18 @@ angular
           pressure: 'y2',
           sun: 'y2'
         },
-        names: { temperature: 'Temperatur', humidity: 'Luftfeuchtigkeit', pressure: 'Luftdruck', rain: 'Regen', sun: 'Sonne' },
-        classes: {  },
-        types: { temperature: 'spline', humidity: 'line', pressure: 'bar', rain: 'area-step', sun: 'spline' },
+        names: { temperature: 'Temperatur', humidity: 'Luftfeuchtigkeit', pressure: 'Luftdruck', rain: 'Regen', sun: 'Sonne', 'min_temperature': 'Min. Temperatur', 'max_temperature': 'Max. Temperatur'  },
+        classes: { temperature: 'temperature', 'min_temperature': 'min-temperature', 'max_temperature': 'max-temperature' },
+        types: { temperature: 'spline', 'min_temperature': 'spline', 'max_temperature': 'spline', humidity: 'line', pressure: 'bar', rain: 'area-step', sun: 'spline' },
         labels: {
           format: {
             temperature: function (v, id, i, j) { return v.toFixed(1) + '°C'; },
+            min_temperature: function (v, id, i, j) { return v.toFixed(1) + '°C'; },
+            max_temperature: function (v, id, i, j) { return v.toFixed(1) + '°C'; },
             humidity: function (v, id, i, j) { return v.toFixed(1) + '%'; },
           }
         },
-        colors: { temperature: '#ff851b', humidity: '#28b62c', pressure: '#C5EFF7' },
+        colors: { temperature: '#ff851b', 'min_temperature': '#3498db', 'max_temperature': '#e74c3c', humidity: '#28b62c', pressure: '#C5EFF7', sun: '#ff4136' },
         empty: { label: { text: "Loading data..." } }
       },
       axis: {

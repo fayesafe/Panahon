@@ -18,27 +18,38 @@ angular
         $scope.datepicker.format($scope.format);
 
         if ($scope.format == 'DD.MM.YYYY') {
-          $scope.getData = DataService.getDataOfDay;
-          $scope.formatTimestamp = DatetimeService.formatTime;
-          $scope.datepicker.date()
+          $scope.series = 'hours';
+          $scope.getStartDate = function(date) { return date; };
+          $scope.getEndDate = DatetimeService.getNextDay;
+          $scope.formatDate = DatetimeService.toTimeString;
         } else if ($scope.format == 'MM.YYYY') {
-          $scope.getData = DataService.getDataOfMonth;
-          $scope.formatTimestamp = DatetimeService.formatDay;
+          $scope.series = 'days';
+          $scope.getStartDate = DatetimeService.getStartOfMonth;
+          $scope.getEndDate = DatetimeService.getNextMonth;
+          $scope.formatDate = DatetimeService.toDayString;
         } else {
-          $scope.getData = DataService.getDataOfYear;
-          $scope.formatTimestamp = function(ts, toLocal, index) {
-            return index+'. Woche';
+          $scope.series = 'weeks';
+          $scope.getStartDate = DatetimeService.getStartOfYear;
+          $scope.getEndDate =  DatetimeService.getNextYear;
+          $scope.formatDate = function(date, index) {
+            return index + '. Woche';
           };
         }
 
-        $scope.loadData($scope.datepicker.date().valueOf());
+        $scope.loadData(new Date($scope.datepicker.date().valueOf()));
       });
 
-      $scope.loadData = function(ts) {
-        $scope.getData(ts).then(function(rows) {
+      $scope.loadData = function(startDate) {
+        var startDate = $scope.getStartDate(new Date(startDate));
+        var endDate = $scope.getEndDate(startDate);
+
+        console.log(startDate, endDate);
+
+        DataService.getData($scope.series, startDate, endDate).then(function(rows) {
+          console.log(rows);
           rows.forEach(function(elem, index, array) {
             if (index != 0) {
-              elem[0] = $scope.formatTimestamp(elem[0], true, index);
+              elem[0] = $scope.formatDate(new Date(elem[0]), index);
             }
           });
           $scope.$broadcast(EVENTS.DATA_UPDATED, rows);
